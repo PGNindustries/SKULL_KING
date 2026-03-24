@@ -289,7 +289,7 @@ html_code = f"""<!DOCTYPE html>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-sm md:text-base">
                         
-                        {/* COLUMNA IZQUIERDA */}
+                        {{/* COLUMNA IZQUIERDA */}}
                         <div className="space-y-6">
                             <section>
                                 <h3 className="text-xl font-bold text-white mb-2 pb-1 border-b border-slate-600">🏴‍☠️ Cómo Jugar</h3>
@@ -335,7 +335,7 @@ html_code = f"""<!DOCTYPE html>
                             </section>
                         </div>
 
-                        {/* COLUMNA DERECHA: HABILIDADES PIRATA */}
+                        {{/* COLUMNA DERECHA: HABILIDADES PIRATA */}}
                         <div className="bg-[#0f172a] p-5 rounded-xl border-2 border-red-900/50">
                             <h3 className="text-xl font-bold text-[#ffd700] mb-4 pb-2 border-b border-[#c5a059] flex items-center gap-2">
                                 <Swords size={{24}}/> Habilidades Pirata
@@ -388,7 +388,7 @@ html_code = f"""<!DOCTYPE html>
             const [copied,          setCopied]          = useState(false);
             const [toast,           setToast]           = useState(null);
             const [showLeaderboard, setShowLeaderboard] = useState(false);
-            const [showHelp,        setShowHelp]        = useState(false); // NUEVO ESTADO AYUDA
+            const [showHelp,        setShowHelp]        = useState(false);
             const [tigressModal,    setTigressModal]    = useState(null);
             const [isHandMinimized, setIsHandMinimized] = useState(false);
             const resolvingTrickRef = useRef(false);
@@ -715,7 +715,7 @@ html_code = f"""<!DOCTYPE html>
                             </div>
                             {{error && <p className="text-red-400 text-center text-sm font-bold bg-red-900/20 p-2 rounded border border-red-900/50">{{error}}</p>}}
                             
-                            {/* BOTÓN DE AYUDA EN EL MENU */}
+                            {{/* BOTÓN DE AYUDA EN EL MENU */}}
                             <button onClick={{()=>setShowHelp(true)}} className="w-full mt-4 bg-slate-800 hover:bg-slate-700 text-[#c5a059] py-3 rounded-lg font-bold border border-slate-600 shadow-md transition-all flex justify-center items-center gap-2">
                                 <HelpCircle size={{20}}/> Cómo Jugar y Reglas
                             </button>
@@ -812,7 +812,7 @@ html_code = f"""<!DOCTYPE html>
                                 {{gameState.nextTrickLowWins && <span className="bg-purple-900 text-purple-300 text-xs px-2 py-1 rounded border border-purple-600 font-bold">⬇ BAJA GANA</span>}}
                             </div>
                             
-                            {/* BOTONES DE AYUDA Y LEADERBOARD EN EL HEADER */}
+                            {{/* BOTONES DE AYUDA Y LEADERBOARD EN EL HEADER */}}
                             <div className="flex gap-2">
                                 <button onClick={{()=>setShowHelp(true)}} className="bg-[#334155] p-2 rounded text-[#c5a059] hover:text-[#ffd700] hover:bg-[#475569] transition-colors shadow-sm" title="Manual del Pirata (Ayuda)">
                                     <HelpCircle size={{20}}/>
