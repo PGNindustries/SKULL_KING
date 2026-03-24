@@ -32,11 +32,7 @@ st.markdown(hide_st_style, unsafe_allow_html=True)
 
 # =====================================================================
 # CONFIGURACIÓN DE FIREBASE
-# Puedes poner tus credenciales directamente aquí para pruebas locales,
-# o mejor usa st.secrets en Streamlit Cloud (ver README.md)
 # =====================================================================
-
-# Intenta leer desde st.secrets (Streamlit Cloud), sino usa variables de entorno
 try:
     FIREBASE_API_KEY        = st.secrets["firebase"]["apiKey"]
     FIREBASE_AUTH_DOMAIN    = st.secrets["firebase"]["authDomain"]
@@ -45,7 +41,6 @@ try:
     FIREBASE_MESSAGING_ID   = st.secrets["firebase"]["messagingSenderId"]
     FIREBASE_APP_ID         = st.secrets["firebase"]["appId"]
 except Exception:
-    # Fallback: variables de entorno locales o valores por defecto
     FIREBASE_API_KEY        = os.environ.get("FIREBASE_API_KEY", "TU_API_KEY")
     FIREBASE_AUTH_DOMAIN    = os.environ.get("FIREBASE_AUTH_DOMAIN", "tu-proyecto.firebaseapp.com")
     FIREBASE_PROJECT_ID     = os.environ.get("FIREBASE_PROJECT_ID", "tu-proyecto")
@@ -53,7 +48,6 @@ except Exception:
     FIREBASE_MESSAGING_ID   = os.environ.get("FIREBASE_MESSAGING_ID", "000000000000")
     FIREBASE_APP_ID         = os.environ.get("FIREBASE_APP_ID", "1:000000000000:web:abc123")
 
-# Detectar si Firebase está configurado
 firebase_configured = FIREBASE_API_KEY not in ("TU_API_KEY", "", None)
 
 if not firebase_configured:
@@ -100,7 +94,7 @@ html_code = f"""<!DOCTYPE html>
         import {{ Skull, Anchor, Map, Trees, Coins, XCircle, Flag, Trophy, Users, PlayCircle, LogIn, Crown, Swords, Ghost, HelpCircle, Copy, Check, Loader, AlertCircle, ArrowUp, ArrowDown, Handshake, RefreshCw, Eye, Gavel, ListOrdered, X, Compass, Ship, Home, ChevronDown, ChevronUp }} from 'https://esm.sh/lucide-react@0.358.0';
 
         // =====================================================================
-        // CONFIGURACIÓN DE FIREBASE (inyectada desde Python/Streamlit)
+        // CONFIGURACIÓN DE FIREBASE
         // =====================================================================
         const firebaseConfig = {{
             apiKey:            "{FIREBASE_API_KEY}",
@@ -132,7 +126,7 @@ html_code = f"""<!DOCTYPE html>
         }};
 
         const PIRATE_NAMES = {{
-            PEDRO:  {{ name: 'Capitán Pedro',       desc: 'Modifica tu apuesta (-1, 0, +1)' }},
+            PEDRO:  {{ name: 'Capitán Pedro',        desc: 'Modifica tu apuesta (-1, 0, +1)' }},
             ELIAS:  {{ name: 'Contramaestre Elías',  desc: 'Apuesta secundaria (0, 10, 20)' }},
             JAVI:   {{ name: 'Vigía Javi',           desc: 'Siguiente ronda gana la carta más baja' }},
             SERGIO: {{ name: 'Timonel Sergio',       desc: 'Elige quién empieza la siguiente' }},
@@ -231,7 +225,7 @@ html_code = f"""<!DOCTYPE html>
         }};
 
         // =====================================================================
-        // COMPONENTE CARTA
+        // COMPONENTES UI (Cartas y Modal de Ayuda)
         // =====================================================================
         const Waves = ({{size}}) => (
             <svg width={{size}} height={{size}} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -284,6 +278,103 @@ html_code = f"""<!DOCTYPE html>
             );
         }};
 
+        // MODAL DE AYUDA / MANUAL DEL PIRATA
+        const HelpModal = ({{ onClose }}) => (
+            <div className="fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-4 backdrop-blur-sm animate-fadeIn">
+                <div className="bg-[#1e293b] p-6 md:p-8 rounded-2xl border-2 border-[#c5a059] shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto custom-scrollbar relative text-left text-[#e2d2ac]">
+                    <button onClick={{onClose}} className="absolute top-4 right-4 text-slate-400 hover:text-white bg-slate-800 rounded-full p-2 transition-colors"><X size={{24}}/></button>
+                    <h2 className="text-2xl md:text-4xl font-bold text-[#ffd700] mb-6 flex items-center gap-3 border-b border-[#334155] pb-4">
+                        <HelpCircle size={{36}}/> Manual del Pirata
+                    </h2>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-sm md:text-base">
+                        
+                        {/* COLUMNA IZQUIERDA */}
+                        <div className="space-y-6">
+                            <section>
+                                <h3 className="text-xl font-bold text-white mb-2 pb-1 border-b border-slate-600">🏴‍☠️ Cómo Jugar</h3>
+                                <p className="mb-2">El juego consta de <strong>10 rondas</strong>. En la ronda 1 se reparte 1 carta, en la 10 se reparten 10. Al inicio, debes observar tu mano y <strong>apostar cuántas bazas vas a ganar</strong>.</p>
+                                <ul className="list-disc pl-5 space-y-1 text-slate-300">
+                                    <li>El primer jugador tira una carta y marca el <strong>palo a seguir</strong> (Loro, Mapa o Cofre). Los demás están obligados a seguir ese palo si lo tienen.</li>
+                                    <li>Las cartas negras (Jolly Roger) son triunfos: ganan a cualquier palo normal.</li>
+                                    <li>Las cartas Especiales (Huidas, Sirenas, Piratas, etc.) se pueden jugar en cualquier momento, <strong>incluso si tienes el palo pedido</strong>.</li>
+                                </ul>
+                            </section>
+
+                            <section>
+                                <h3 className="text-xl font-bold text-white mb-2 pb-1 border-b border-slate-600">👑 Jerarquía de Cartas</h3>
+                                <p className="mb-2 text-slate-400 text-xs">De la más fuerte a la más débil:</p>
+                                <ol className="list-decimal pl-5 space-y-1 text-slate-300">
+                                    <li><strong className="text-yellow-400">Skull King:</strong> Gana a todo... ¡excepto a la Sirena!</li>
+                                    <li><strong className="text-cyan-400">Sirena:</strong> Gana al Skull King y palos, pero pierde contra Piratas.</li>
+                                    <li><strong className="text-red-400">Pirata / Tigresa (Pirata):</strong> Ganan a Sirenas y palos normales/negros.</li>
+                                    <li><strong className="text-gray-400">Jolly Roger (Negras):</strong> Triunfo numerado (1-14). Gana a palos normales.</li>
+                                    <li><strong>Palos Normales:</strong> Loro (Verde), Mapa (Morado), Cofre (Amarillo). El mayor número gana.</li>
+                                    <li><strong className="text-sky-300">Huida / Tigresa (Huida):</strong> Siempre pierde (valor 0).</li>
+                                    <li><strong className="text-emerald-400">Kraken:</strong> Destruye la baza. Nadie la gana. El que lo tiró decide quién empieza la siguiente.</li>
+                                    <li><strong className="text-blue-400">Ballena:</strong> Cambia todos los palos y gana la carta numérica más alta (incluso si no es negra).</li>
+                                </ol>
+                            </section>
+
+                            <section>
+                                <h3 className="text-xl font-bold text-white mb-2 pb-1 border-b border-slate-600">💰 Puntuaciones</h3>
+                                <ul className="list-disc pl-5 space-y-1 text-slate-300">
+                                    <li><strong className="text-green-400">Apuesta Acertada (1 a 10):</strong> +20 pts por cada baza ganada.</li>
+                                    <li><strong className="text-green-400">Apuesta 0 Acertada:</strong> +10 pts multiplicados por la ronda actual (ej. Ronda 5 = +50 pts).</li>
+                                    <li><strong className="text-red-400">Apuesta Fallada:</strong> -10 pts por cada baza de diferencia entre tu apuesta y lo que ganaste (incluso si apuestas 0).</li>
+                                    <li className="pt-2 text-[#ffd700]"><strong>Puntos Extra (Bonus):</strong>
+                                        <ul className="pl-5 mt-1 text-slate-300 border-l border-[#c5a059] ml-2 space-y-1">
+                                            <li>- Ganar con un 14 normal: +10 pts.</li>
+                                            <li>- Ganar con un 14 negro: +20 pts.</li>
+                                            <li>- Pirata captura a una Sirena: +20 pts.</li>
+                                            <li>- Skull King captura Piratas: +30 pts (c/u).</li>
+                                            <li>- Sirena captura al Skull King: +40 pts.</li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </section>
+                        </div>
+
+                        {/* COLUMNA DERECHA: HABILIDADES PIRATA */}
+                        <div className="bg-[#0f172a] p-5 rounded-xl border-2 border-red-900/50">
+                            <h3 className="text-xl font-bold text-[#ffd700] mb-4 pb-2 border-b border-[#c5a059] flex items-center gap-2">
+                                <Swords size={{24}}/> Habilidades Pirata
+                            </h3>
+                            <p className="mb-4 text-sm text-slate-400">
+                                Al ganar una baza con uno de estos piratas, se activará su poder especial inmediatamente:
+                            </p>
+                            <div className="space-y-4">
+                                <div className="bg-[#1e293b] p-3 rounded-lg border-l-4 border-red-500">
+                                    <span className="font-bold text-white block mb-1">Capitán Pedro</span>
+                                    <span className="text-sm text-slate-300">Te permite modificar tu apuesta actual sumando 1, restando 1, o manteniéndola igual. Muy útil si te pasas o te quedas corto.</span>
+                                </div>
+                                <div className="bg-[#1e293b] p-3 rounded-lg border-l-4 border-blue-500">
+                                    <span className="font-bold text-white block mb-1">Contramaestre Elías</span>
+                                    <span className="text-sm text-slate-300">Haces una apuesta secundaria secreta. Puedes apostar 0, 10 o 20 pts extras (se sumarán o restarán a tu puntuación dependiendo de si aciertas tu apuesta principal o no).</span>
+                                </div>
+                                <div className="bg-[#1e293b] p-3 rounded-lg border-l-4 border-emerald-500">
+                                    <span className="font-bold text-white block mb-1">Vigía Javi</span>
+                                    <span className="text-sm text-slate-300">¡Locura! Obliga a que en la siguiente baza, la carta ganadora sea <strong>la más baja</strong> en lugar de la más alta. Invierte totalmente las reglas.</span>
+                                </div>
+                                <div className="bg-[#1e293b] p-3 rounded-lg border-l-4 border-purple-500">
+                                    <span className="font-bold text-white block mb-1">Timonel Sergio</span>
+                                    <span className="text-sm text-slate-300">Toma el timón y elige qué jugador (puedes ser tú u otro) empezará tirando carta en la siguiente baza.</span>
+                                </div>
+                                <div className="bg-[#1e293b] p-3 rounded-lg border-l-4 border-orange-500">
+                                    <span className="font-bold text-white block mb-1">Corsario Torri</span>
+                                    <span className="text-sm text-slate-300">El ladrón de manos. Intercambias todas las cartas que te quedan en la mano con las de cualquier otro jugador de la mesa que elijas.</span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div className="mt-8 text-center">
+                        <button onClick={{onClose}} className="bg-[#c5a059] hover:bg-[#ffd700] text-black px-10 py-3 rounded-xl font-bold text-lg transition-colors shadow-lg">¡Entendido, al abordaje!</button>
+                    </div>
+                </div>
+            </div>
+        );
+
         // =====================================================================
         // COMPONENTE PRINCIPAL
         // =====================================================================
@@ -297,6 +388,7 @@ html_code = f"""<!DOCTYPE html>
             const [copied,          setCopied]          = useState(false);
             const [toast,           setToast]           = useState(null);
             const [showLeaderboard, setShowLeaderboard] = useState(false);
+            const [showHelp,        setShowHelp]        = useState(false); // NUEVO ESTADO AYUDA
             const [tigressModal,    setTigressModal]    = useState(null);
             const [isHandMinimized, setIsHandMinimized] = useState(false);
             const resolvingTrickRef = useRef(false);
@@ -571,436 +663,466 @@ html_code = f"""<!DOCTYPE html>
             }};
 
             // =====================================================================
-            // RENDER
+            // LÓGICA DE RENDERIZADO PRINCIPAL
             // =====================================================================
-            if (!user) return (
-                <div className="min-h-screen bg-[#0f172a] flex items-center justify-center text-[#e2d2ac] font-serif">
-                    <Loader className="animate-spin text-[#c5a059]" size={{48}} />
-                    <h2 className="text-xl font-bold ml-4">Conectando con la red pirata...</h2>
-                </div>
-            );
-
-            // ── LOBBY DE ENTRADA ──────────────────────────────────────────────
-            if (!activeRoomId) return (
-                <div className="bg-[#0f172a] min-h-screen text-[#e2d2ac] font-serif p-6 flex flex-col items-center justify-center">
-                    <div className="text-center mb-8">
-                        <div className="flex justify-center mb-4"><Skull className="text-[#c5a059]" size={{80}} /></div>
-                        <h1 className="text-5xl text-[#ffd700] font-bold drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] tracking-wider">SKULL KING</h1>
-                        <p className="text-slate-400 mt-2 text-sm">El juego de cartas pirata definitivo</p>
+            const renderMainContent = () => {{
+                
+                if (!user) return (
+                    <div className="min-h-screen bg-[#0f172a] flex items-center justify-center text-[#e2d2ac] font-serif">
+                        <Loader className="animate-spin text-[#c5a059]" size={{48}} />
+                        <h2 className="text-xl font-bold ml-4">Conectando con la red pirata...</h2>
                     </div>
-                    <div className="space-y-6 w-full max-w-sm bg-[#1e293b] p-8 rounded-2xl border-4 border-[#c5a059] shadow-2xl relative">
-                        <div className="space-y-2">
-                            <label className="text-xs uppercase font-bold text-[#c5a059] tracking-widest">Tu Nombre de Pirata</label>
-                            <input
-                                className="w-full p-4 rounded-lg bg-[#0f172a] border-2 border-[#334155] text-white focus:border-[#ffd700] outline-none transition-colors"
-                                placeholder="Ej. Barbanegra"
-                                value={{playerName}}
-                                onChange={{e=>setPlayerName(e.target.value)}}
-                                onKeyDown={{e=>e.key==='Enter'&&createRoom()}}
-                            />
+                );
+
+                // ── LOBBY DE ENTRADA ──────────────────────────────────────────────
+                if (!activeRoomId) return (
+                    <div className="bg-[#0f172a] min-h-screen text-[#e2d2ac] font-serif p-6 flex flex-col items-center justify-center relative">
+                        <div className="text-center mb-8">
+                            <div className="flex justify-center mb-4"><Skull className="text-[#c5a059]" size={{80}} /></div>
+                            <h1 className="text-5xl text-[#ffd700] font-bold drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] tracking-wider">SKULL KING</h1>
+                            <p className="text-slate-400 mt-2 text-sm">El juego de cartas pirata definitivo</p>
                         </div>
-                        <button onClick={{createRoom}} className="w-full bg-gradient-to-r from-[#ca8a04] to-[#eab308] hover:from-[#a16207] hover:to-[#ca8a04] text-[#2c1810] py-4 rounded-lg font-bold text-lg shadow-[0_4px_0_#713f12] active:shadow-none active:translate-y-1 transition-all flex items-center justify-center gap-2">
-                            <Ship size={{24}}/> CREAR SALA
-                        </button>
-                        <div className="relative flex items-center py-2">
-                            <div className="flex-grow border-t border-[#334155]"></div>
-                            <span className="flex-shrink-0 mx-4 text-slate-500 text-xs uppercase tracking-widest">O únete</span>
-                            <div className="flex-grow border-t border-[#334155]"></div>
-                        </div>
-                        <div className="flex gap-2">
-                            <input
-                                className="flex-1 p-4 rounded-lg bg-[#0f172a] border-2 border-[#334155] text-white focus:border-[#ffd700] outline-none uppercase font-mono tracking-widest text-center"
-                                placeholder="CÓDIGO"
-                                value={{inputRoomId}}
-                                onChange={{e=>setInputRoomId(e.target.value)}}
-                                onKeyDown={{e=>e.key==='Enter'&&joinRoom()}}
-                            />
-                            <button onClick={{joinRoom}} className="bg-[#334155] hover:bg-[#475569] text-white px-6 rounded-lg font-bold shadow-[0_4px_0_#1e293b] active:shadow-none active:translate-y-1 transition-all">
-                                <LogIn size={{24}}/>
+                        <div className="space-y-6 w-full max-w-sm bg-[#1e293b] p-8 rounded-2xl border-4 border-[#c5a059] shadow-2xl relative">
+                            <div className="space-y-2">
+                                <label className="text-xs uppercase font-bold text-[#c5a059] tracking-widest">Tu Nombre de Pirata</label>
+                                <input
+                                    className="w-full p-4 rounded-lg bg-[#0f172a] border-2 border-[#334155] text-white focus:border-[#ffd700] outline-none transition-colors"
+                                    placeholder="Ej. Barbanegra"
+                                    value={{playerName}}
+                                    onChange={{e=>setPlayerName(e.target.value)}}
+                                    onKeyDown={{e=>e.key==='Enter'&&createRoom()}}
+                                />
+                            </div>
+                            <button onClick={{createRoom}} className="w-full bg-gradient-to-r from-[#ca8a04] to-[#eab308] hover:from-[#a16207] hover:to-[#ca8a04] text-[#2c1810] py-4 rounded-lg font-bold text-lg shadow-[0_4px_0_#713f12] active:shadow-none active:translate-y-1 transition-all flex items-center justify-center gap-2">
+                                <Ship size={{24}}/> CREAR SALA
+                            </button>
+                            <div className="relative flex items-center py-2">
+                                <div className="flex-grow border-t border-[#334155]"></div>
+                                <span className="flex-shrink-0 mx-4 text-slate-500 text-xs uppercase tracking-widest">O únete</span>
+                                <div className="flex-grow border-t border-[#334155]"></div>
+                            </div>
+                            <div className="flex gap-2">
+                                <input
+                                    className="flex-1 p-4 rounded-lg bg-[#0f172a] border-2 border-[#334155] text-white focus:border-[#ffd700] outline-none uppercase font-mono tracking-widest text-center"
+                                    placeholder="CÓDIGO"
+                                    value={{inputRoomId}}
+                                    onChange={{e=>setInputRoomId(e.target.value)}}
+                                    onKeyDown={{e=>e.key==='Enter'&&joinRoom()}}
+                                />
+                                <button onClick={{joinRoom}} className="bg-[#334155] hover:bg-[#475569] text-white px-6 rounded-lg font-bold shadow-[0_4px_0_#1e293b] active:shadow-none active:translate-y-1 transition-all">
+                                    <LogIn size={{24}}/>
+                                </button>
+                            </div>
+                            {{error && <p className="text-red-400 text-center text-sm font-bold bg-red-900/20 p-2 rounded border border-red-900/50">{{error}}</p>}}
+                            
+                            {/* BOTÓN DE AYUDA EN EL MENU */}
+                            <button onClick={{()=>setShowHelp(true)}} className="w-full mt-4 bg-slate-800 hover:bg-slate-700 text-[#c5a059] py-3 rounded-lg font-bold border border-slate-600 shadow-md transition-all flex justify-center items-center gap-2">
+                                <HelpCircle size={{20}}/> Cómo Jugar y Reglas
                             </button>
                         </div>
-                        {{error && <p className="text-red-400 text-center text-sm font-bold bg-red-900/20 p-2 rounded border border-red-900/50">{{error}}</p>}}
                     </div>
-                </div>
-            );
+                );
 
-            if (!gameState) return (
-                <div className="min-h-screen bg-[#0f172a] flex flex-col items-center justify-center text-[#e2d2ac] font-serif">
-                    <Loader className="animate-spin text-[#c5a059] mb-4" size={{48}}/>
-                    <h2 className="text-xl font-bold">Buscando la sala...</h2>
-                    <button onClick={{()=>setActiveRoomId('')}} className="mt-4 text-slate-400 underline hover:text-white">Cancelar</button>
-                </div>
-            );
+                if (!gameState) return (
+                    <div className="min-h-screen bg-[#0f172a] flex flex-col items-center justify-center text-[#e2d2ac] font-serif">
+                        <Loader className="animate-spin text-[#c5a059] mb-4" size={{48}}/>
+                        <h2 className="text-xl font-bold">Buscando la sala...</h2>
+                        <button onClick={{()=>setActiveRoomId('')}} className="mt-4 text-slate-400 underline hover:text-white">Cancelar</button>
+                    </div>
+                );
 
-            const me = gameState.players.find(p => p.uid === user.uid);
-            if (!me) return (
-                <div className="min-h-screen bg-[#0f172a] flex flex-col items-center justify-center text-[#e2d2ac] font-serif">
-                    <Loader className="animate-spin text-[#c5a059] mb-4" size={{48}}/>
-                    <h2 className="text-xl font-bold">Sincronizando...</h2>
-                    <button onClick={{()=>setActiveRoomId('')}} className="mt-4 text-slate-400 underline hover:text-white">Cancelar</button>
-                </div>
-            );
+                const me = gameState.players.find(p => p.uid === user.uid);
+                if (!me) return (
+                    <div className="min-h-screen bg-[#0f172a] flex flex-col items-center justify-center text-[#e2d2ac] font-serif">
+                        <Loader className="animate-spin text-[#c5a059] mb-4" size={{48}}/>
+                        <h2 className="text-xl font-bold">Sincronizando...</h2>
+                        <button onClick={{()=>setActiveRoomId('')}} className="mt-4 text-slate-400 underline hover:text-white">Cancelar</button>
+                    </div>
+                );
 
-            // ── LOBBY DE SALA ─────────────────────────────────────────────────
-            if (gameState.phase === 'LOBBY') return (
-                <div className="bg-[#0f172a] min-h-screen text-[#e2d2ac] font-serif p-6 flex flex-col items-center justify-center">
-                    <div className="w-full max-w-md bg-[#1e293b] p-6 rounded-2xl border-2 border-[#c5a059] shadow-2xl">
-                        <h2 className="text-2xl font-bold text-[#ffd700] text-center mb-6 flex items-center justify-center gap-2"><Anchor/> Sala de Espera</h2>
-                        <div
-                            className="bg-[#0f172a] p-4 rounded-xl mb-6 text-center border border-[#334155] cursor-pointer hover:border-[#c5a059] transition-colors"
-                            onClick={{()=>{{ navigator.clipboard.writeText(activeRoomId); setCopied(true); setTimeout(()=>setCopied(false),2000); }}}}
-                        >
-                            <div className="text-xs text-slate-400 uppercase tracking-widest mb-1">Código de Sala — toca para copiar</div>
-                            <div className="text-5xl font-mono tracking-widest text-[#ffd700] font-bold">{{activeRoomId}}</div>
-                            <div className="text-xs text-slate-500 mt-1">{{copied?'¡Copiado! ✓':'Comparte este código con tus amigos'}}</div>
+                // ── LOBBY DE SALA ─────────────────────────────────────────────────
+                if (gameState.phase === 'LOBBY') return (
+                    <div className="bg-[#0f172a] min-h-screen text-[#e2d2ac] font-serif p-6 flex flex-col items-center justify-center">
+                        <div className="w-full max-w-md bg-[#1e293b] p-6 rounded-2xl border-2 border-[#c5a059] shadow-2xl">
+                            <h2 className="text-2xl font-bold text-[#ffd700] text-center mb-6 flex items-center justify-center gap-2"><Anchor/> Sala de Espera</h2>
+                            <div
+                                className="bg-[#0f172a] p-4 rounded-xl mb-6 text-center border border-[#334155] cursor-pointer hover:border-[#c5a059] transition-colors"
+                                onClick={{()=>{{ navigator.clipboard.writeText(activeRoomId); setCopied(true); setTimeout(()=>setCopied(false),2000); }}}}
+                            >
+                                <div className="text-xs text-slate-400 uppercase tracking-widest mb-1">Código de Sala — toca para copiar</div>
+                                <div className="text-5xl font-mono tracking-widest text-[#ffd700] font-bold">{{activeRoomId}}</div>
+                                <div className="text-xs text-slate-500 mt-1">{{copied?'¡Copiado! ✓':'Comparte este código con tus amigos'}}</div>
+                            </div>
+                            <div className="mb-6">
+                                <h3 className="text-sm font-bold text-[#c5a059] uppercase mb-3 flex items-center gap-2"><Users size={{16}}/> Tripulación ({{gameState.players.length}}/8)</h3>
+                                <div className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar">
+                                    {{gameState.players.map(p=>(
+                                        <div key={{p.uid}} className="bg-[#334155] p-3 rounded-lg flex justify-between items-center border border-[#475569]">
+                                            <span className="font-bold text-white">{{p.name}}</span>
+                                            {{p.uid===gameState.hostId && <span className="text-xs bg-[#ffd700] text-black px-2 py-1 rounded font-bold flex items-center gap-1"><Crown size={{12}}/> CAPITÁN</span>}}
+                                        </div>
+                                    ))}}
+                                </div>
+                            </div>
+                            {{gameState.hostId===user.uid ? (
+                                <button
+                                    onClick={{()=>startRound(1)}}
+                                    disabled={{gameState.players.length < 2}}
+                                    className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed text-white py-4 rounded-xl font-bold text-lg shadow-[0_4px_0_#064e3b] active:shadow-none active:translate-y-1 transition-all uppercase tracking-wider flex justify-center items-center gap-2"
+                                >
+                                    <Ship/> Zarpar {{gameState.players.length<2?'(mín. 2 jugadores)':''}}
+                                </button>
+                            ) : (
+                                <div className="bg-[#0f172a] p-4 rounded-xl border border-[#334155] text-center animate-pulse">
+                                    <p className="text-slate-400 text-sm">El Capitán está reuniendo a la tripulación...</p>
+                                </div>
+                            )}}
+                            
+                            <div className="mt-4 flex gap-2">
+                                <button onClick={{()=>setShowHelp(true)}} className="flex-1 bg-slate-800 hover:bg-slate-700 text-[#c5a059] py-2 rounded-lg font-bold border border-slate-600 transition-all flex justify-center items-center gap-2 text-sm">
+                                    <HelpCircle size={{16}}/> Reglas
+                                </button>
+                                <button onClick={{()=>setActiveRoomId('')}} className="flex-1 py-2 text-slate-500 hover:text-slate-300 text-sm underline transition-colors">
+                                    Abandonar sala
+                                </button>
+                            </div>
                         </div>
-                        <div className="mb-6">
-                            <h3 className="text-sm font-bold text-[#c5a059] uppercase mb-3 flex items-center gap-2"><Users size={{16}}/> Tripulación ({{gameState.players.length}}/8)</h3>
-                            <div className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar">
-                                {{gameState.players.map(p=>(
-                                    <div key={{p.uid}} className="bg-[#334155] p-3 rounded-lg flex justify-between items-center border border-[#475569]">
-                                        <span className="font-bold text-white">{{p.name}}</span>
-                                        {{p.uid===gameState.hostId && <span className="text-xs bg-[#ffd700] text-black px-2 py-1 rounded font-bold flex items-center gap-1"><Crown size={{12}}/> CAPITÁN</span>}}
+                    </div>
+                );
+
+                // ── JUEGO PRINCIPAL ───────────────────────────────────────────────
+                const myIndex   = gameState.players.findIndex(p => p.uid === user.uid);
+                const opponents = [...gameState.players.slice(myIndex+1), ...gameState.players.slice(0, myIndex)];
+                const isTableFull = gameState.trickCards.length >= gameState.players.length;
+                const isPAPhase   = gameState.phase === 'PIRATE_ACTION';
+                const myPAId      = isPAPhase && gameState.pendingPirateAction?.winnerId === user.uid ? gameState.pendingPirateAction.pirateId : null;
+                const rx = isMobile ? 50 : 80, ry = isMobile ? 40 : 60;
+
+                return (
+                    <div className="bg-[#0f172a] h-screen overflow-hidden flex flex-col text-[#e2d2ac] font-serif relative">
+
+                        {{/* ── HEADER ── */}}
+                        <div className="bg-[#1e293b] p-3 flex justify-between items-center shadow-lg z-20 border-b border-[#334155] flex-shrink-0">
+                            <div className="flex items-center gap-3">
+                                <div className="bg-[#0f172a] px-4 py-1 rounded-full border border-[#c5a059] flex items-center gap-2">
+                                    <span className="text-slate-400 text-xs uppercase">Ronda</span>
+                                    <span className="text-[#ffd700] font-bold text-lg">{{gameState.round}}</span>
+                                    <span className="text-slate-600 text-xs">/10</span>
+                                </div>
+                                {{gameState.nextTrickLowWins && <span className="bg-purple-900 text-purple-300 text-xs px-2 py-1 rounded border border-purple-600 font-bold">⬇ BAJA GANA</span>}}
+                            </div>
+                            
+                            {/* BOTONES DE AYUDA Y LEADERBOARD EN EL HEADER */}
+                            <div className="flex gap-2">
+                                <button onClick={{()=>setShowHelp(true)}} className="bg-[#334155] p-2 rounded text-[#c5a059] hover:text-[#ffd700] hover:bg-[#475569] transition-colors shadow-sm" title="Manual del Pirata (Ayuda)">
+                                    <HelpCircle size={{20}}/>
+                                </button>
+                                <button onClick={{()=>setShowLeaderboard(!showLeaderboard)}} className="bg-[#334155] p-2 rounded text-white hover:bg-[#475569] transition-colors shadow-sm" title="Clasificación">
+                                    <ListOrdered size={{20}}/>
+                                </button>
+                            </div>
+                        </div>
+
+                        {{/* ── CLASIFICACIÓN LATERAL ── */}}
+                        <div className={{`absolute right-0 top-[56px] bottom-0 w-60 bg-[#1e293b]/95 border-l border-[#c5a059] p-4 z-40 transition-transform duration-300 ${{showLeaderboard?'translate-x-0':'translate-x-full'}} backdrop-blur-md shadow-2xl`}}>
+                            <div className="flex justify-between items-center mb-4 border-b border-[#334155] pb-2">
+                                <span className="text-xs font-bold text-[#c5a059] uppercase tracking-widest">Clasificación</span>
+                                <button onClick={{()=>setShowLeaderboard(false)}} className="text-slate-500 hover:text-white"><X size={{16}}/></button>
+                            </div>
+                            <div className="space-y-2">
+                                {{[...gameState.players].sort((a,b)=>b.score-a.score).map((p,i)=>(
+                                    <div key={{p.uid}} className={{`p-3 rounded-lg flex justify-between items-center ${{p.uid===user.uid?'bg-[#c5a059] text-[#2c1810] font-bold':'bg-[#0f172a] text-slate-300 border border-[#334155]'}}`}}>
+                                        <div className="flex items-center gap-2">
+                                            <span className={{`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${{i===0?'bg-yellow-500 text-black':i===1?'bg-gray-400 text-black':i===2?'bg-orange-700 text-white':'bg-slate-700 text-slate-300'}}`}}>{{i+1}}</span>
+                                            <span className="truncate max-w-[90px] text-sm">{{p.name}}</span>
+                                        </div>
+                                        <span className="font-mono font-bold">{{p.score}}</span>
                                     </div>
                                 ))}}
                             </div>
                         </div>
-                        {{gameState.hostId===user.uid ? (
-                            <button
-                                onClick={{()=>startRound(1)}}
-                                disabled={{gameState.players.length < 2}}
-                                className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed text-white py-4 rounded-xl font-bold text-lg shadow-[0_4px_0_#064e3b] active:shadow-none active:translate-y-1 transition-all uppercase tracking-wider flex justify-center items-center gap-2"
-                            >
-                                <Ship/> Zarpar {{gameState.players.length<2?'(mín. 2 jugadores)':''}}
-                            </button>
-                        ) : (
-                            <div className="bg-[#0f172a] p-4 rounded-xl border border-[#334155] text-center animate-pulse">
-                                <p className="text-slate-400 text-sm">El Capitán está reuniendo a la tripulación...</p>
+
+                        {{/* ── TOAST ── */}}
+                        {{toast && (
+                            <div className="absolute top-20 left-1/2 -translate-x-1/2 bg-[#7f1d1d] text-white px-6 py-3 rounded-xl font-bold shadow-2xl z-50 border-2 border-red-500 text-center w-max max-w-[90vw]">
+                                {{toast}}
                             </div>
                         )}}
-                        <button onClick={{()=>setActiveRoomId('')}} className="w-full mt-3 py-2 text-slate-500 hover:text-slate-300 text-sm underline transition-colors">Abandonar sala</button>
-                    </div>
-                </div>
-            );
 
-            // ── JUEGO PRINCIPAL ───────────────────────────────────────────────
-            const myIndex   = gameState.players.findIndex(p => p.uid === user.uid);
-            const opponents = [...gameState.players.slice(myIndex+1), ...gameState.players.slice(0, myIndex)];
-            const isTableFull = gameState.trickCards.length >= gameState.players.length;
-            const isPAPhase   = gameState.phase === 'PIRATE_ACTION';
-            const myPAId      = isPAPhase && gameState.pendingPirateAction?.winnerId === user.uid ? gameState.pendingPirateAction.pirateId : null;
-            const rx = isMobile ? 50 : 80, ry = isMobile ? 40 : 60;
-
-            return (
-                <div className="bg-[#0f172a] h-screen overflow-hidden flex flex-col text-[#e2d2ac] font-serif relative">
-
-                    {{/* ── HEADER ── */}}
-                    <div className="bg-[#1e293b] p-3 flex justify-between items-center shadow-lg z-20 border-b border-[#334155] flex-shrink-0">
-                        <div className="flex items-center gap-3">
-                            <div className="bg-[#0f172a] px-4 py-1 rounded-full border border-[#c5a059] flex items-center gap-2">
-                                <span className="text-slate-400 text-xs uppercase">Ronda</span>
-                                <span className="text-[#ffd700] font-bold text-lg">{{gameState.round}}</span>
-                                <span className="text-slate-600 text-xs">/10</span>
-                            </div>
-                            {{gameState.nextTrickLowWins && <span className="bg-purple-900 text-purple-300 text-xs px-2 py-1 rounded border border-purple-600 font-bold">⬇ BAJA GANA</span>}}
-                        </div>
-                        <button onClick={{()=>setShowLeaderboard(!showLeaderboard)}} className="bg-[#334155] p-2 rounded text-white hover:bg-[#475569] transition-colors">
-                            <ListOrdered size={{20}}/>
-                        </button>
-                    </div>
-
-                    {{/* ── CLASIFICACIÓN LATERAL ── */}}
-                    <div className={{`absolute right-0 top-[56px] bottom-0 w-60 bg-[#1e293b]/95 border-l border-[#c5a059] p-4 z-40 transition-transform duration-300 ${{showLeaderboard?'translate-x-0':'translate-x-full'}} backdrop-blur-md shadow-2xl`}}>
-                        <div className="flex justify-between items-center mb-4 border-b border-[#334155] pb-2">
-                            <span className="text-xs font-bold text-[#c5a059] uppercase tracking-widest">Clasificación</span>
-                            <button onClick={{()=>setShowLeaderboard(false)}} className="text-slate-500 hover:text-white"><X size={{16}}/></button>
-                        </div>
-                        <div className="space-y-2">
-                            {{[...gameState.players].sort((a,b)=>b.score-a.score).map((p,i)=>(
-                                <div key={{p.uid}} className={{`p-3 rounded-lg flex justify-between items-center ${{p.uid===user.uid?'bg-[#c5a059] text-[#2c1810] font-bold':'bg-[#0f172a] text-slate-300 border border-[#334155]'}}`}}>
-                                    <div className="flex items-center gap-2">
-                                        <span className={{`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${{i===0?'bg-yellow-500 text-black':i===1?'bg-gray-400 text-black':i===2?'bg-orange-700 text-white':'bg-slate-700 text-slate-300'}}`}}>{{i+1}}</span>
-                                        <span className="truncate max-w-[90px] text-sm">{{p.name}}</span>
-                                    </div>
-                                    <span className="font-mono font-bold">{{p.score}}</span>
-                                </div>
-                            ))}}
-                        </div>
-                    </div>
-
-                    {{/* ── TOAST ── */}}
-                    {{toast && (
-                        <div className="absolute top-20 left-1/2 -translate-x-1/2 bg-[#7f1d1d] text-white px-6 py-3 rounded-xl font-bold shadow-2xl z-50 border-2 border-red-500 text-center w-max max-w-[90vw]">
-                            {{toast}}
-                        </div>
-                    )}}
-
-                    {{/* ── OPONENTES ── */}}
-                    <div className="flex justify-center gap-3 p-3 overflow-x-auto flex-shrink-0" style={{{{marginRight: showLeaderboard?'240px':'0', transition:'margin 0.3s'}}}}>
-                        {{opponents.map(p => {{
-                            const isActive = gameState.players[gameState.turnIndex]?.uid === p.uid;
-                            return (
-                                <div key={{p.uid}} className={{`relative flex flex-col items-center min-w-[80px] transition-all duration-300 ${{isActive?'scale-110 z-10':'opacity-70'}}`}}>
-                                    {{isActive && <div className="absolute -top-6 text-[#ffd700] animate-bounce"><Swords size={{18}}/></div>}}
-                                    <div className={{`bg-[#1e293b] p-2 rounded-xl border-2 ${{isActive?'border-[#ffd700] shadow-[0_0_15px_rgba(255,215,0,0.3)]':'border-[#334155]'}}`}}>
-                                        <div className="font-bold truncate w-full text-center text-xs mb-1 text-white">{{p.name}}</div>
-                                        <div className="text-xs text-[#c5a059] font-mono bg-[#0f172a] rounded px-2 py-0.5 text-center mb-1">
-                                            {{p.tricksWon}} / {{p.bid===null?'?':p.bid}}
+                        {{/* ── OPONENTES ── */}}
+                        <div className="flex justify-center gap-3 p-3 overflow-x-auto flex-shrink-0" style={{{{marginRight: showLeaderboard?'240px':'0', transition:'margin 0.3s'}}}}>
+                            {{opponents.map(p => {{
+                                const isActive = gameState.players[gameState.turnIndex]?.uid === p.uid;
+                                return (
+                                    <div key={{p.uid}} className={{`relative flex flex-col items-center min-w-[80px] transition-all duration-300 ${{isActive?'scale-110 z-10':'opacity-70'}}`}}>
+                                        {{isActive && <div className="absolute -top-6 text-[#ffd700] animate-bounce"><Swords size={{18}}/></div>}}
+                                        <div className={{`bg-[#1e293b] p-2 rounded-xl border-2 ${{isActive?'border-[#ffd700] shadow-[0_0_15px_rgba(255,215,0,0.3)]':'border-[#334155]'}}`}}>
+                                            <div className="font-bold truncate w-full text-center text-xs mb-1 text-white">{{p.name}}</div>
+                                            <div className="text-xs text-[#c5a059] font-mono bg-[#0f172a] rounded px-2 py-0.5 text-center mb-1">
+                                                {{p.tricksWon}} / {{p.bid===null?'?':p.bid}}
+                                            </div>
+                                            <div className="flex -space-x-1 justify-center">
+                                                {{Array(Math.min(p.hand.length,3)).fill(0).map((_,i)=>(
+                                                    <div key={{i}} className="w-3 h-4 bg-[#334155] border border-[#475569] rounded-sm"></div>
+                                                ))}}
+                                                {{p.hand.length>3 && <span className="text-[8px] text-slate-500 ml-1">+{{p.hand.length-3}}</span>}}
+                                            </div>
                                         </div>
-                                        <div className="flex -space-x-1 justify-center">
-                                            {{Array(Math.min(p.hand.length,3)).fill(0).map((_,i)=>(
-                                                <div key={{i}} className="w-3 h-4 bg-[#334155] border border-[#475569] rounded-sm"></div>
+                                    </div>
+                                );
+                            }})}}
+                        </div>
+
+                        {{/* ── MESA ── */}}
+                        <div className="flex-1 relative flex items-center justify-center overflow-hidden" style={{{{marginRight: showLeaderboard?'240px':'0', transition:'margin 0.3s'}}}}>
+                            {{/* Tapete */}}
+                            <div className="absolute inset-2 rounded-[2rem] border-[12px] border-[#3e2723] overflow-hidden pointer-events-none">
+                                <div className="absolute inset-0 bg-[#0f3d3e]"></div>
+                                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_30%,rgba(0,0,0,0.6)_100%)]"></div>
+                                <div className="absolute inset-0 flex items-center justify-center opacity-10 text-[#c5a059]">
+                                    <Skull size={{200}} strokeWidth={{1}}/>
+                                </div>
+                            </div>
+
+                            {{/* Fase de apuestas */}}
+                            {{gameState.phase === 'BIDDING' && (
+                                <div className="absolute inset-0 z-30 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center p-6 animate-fadeIn overflow-y-auto">
+                                    <h2 className="text-3xl font-bold mb-2 text-[#ffd700]">¿Cuántas bazas ganarás?</h2>
+                                    <p className="text-slate-400 text-sm mb-6">Ronda {{gameState.round}} — {{gameState.round}} carta{{gameState.round>1?'s':''}}</p>
+                                    {{me.bid !== null ? (
+                                        <div className="text-center text-emerald-400 font-bold text-xl animate-pulse flex items-center gap-2"><Check size={{24}}/> Apuesta enviada: {{me.bid}}</div>
+                                    ) : (
+                                        <div className="grid grid-cols-4 gap-3 max-w-md w-full">
+                                            <button onClick={{()=>submitBid(0)}} className="col-span-4 bg-blue-700 hover:bg-blue-600 py-4 rounded-xl font-bold text-2xl border-2 border-blue-400 transition-all hover:scale-[1.02]">0</button>
+                                            {{Array.from({{length:gameState.round}},(_,i)=>i+1).map(n=>(
+                                                <button key={{n}} onClick={{()=>submitBid(n)}} className="bg-[#334155] hover:bg-[#475569] aspect-square rounded-xl font-bold text-lg border border-[#64748b] text-white transition-all hover:scale-110 flex items-center justify-center">{{n}}</button>
                                             ))}}
-                                            {{p.hand.length>3 && <span className="text-[8px] text-slate-500 ml-1">+{{p.hand.length-3}}</span>}}
                                         </div>
-                                    </div>
-                                </div>
-                            );
-                        }})}}
-                    </div>
-
-                    {{/* ── MESA ── */}}
-                    <div className="flex-1 relative flex items-center justify-center overflow-hidden" style={{{{marginRight: showLeaderboard?'240px':'0', transition:'margin 0.3s'}}}}>
-                        {{/* Tapete */}}
-                        <div className="absolute inset-2 rounded-[2rem] border-[12px] border-[#3e2723] overflow-hidden pointer-events-none">
-                            <div className="absolute inset-0 bg-[#0f3d3e]"></div>
-                            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_30%,rgba(0,0,0,0.6)_100%)]"></div>
-                            <div className="absolute inset-0 flex items-center justify-center opacity-10 text-[#c5a059]">
-                                <Skull size={{200}} strokeWidth={{1}}/>
-                            </div>
-                        </div>
-
-                        {{/* Fase de apuestas */}}
-                        {{gameState.phase === 'BIDDING' && (
-                            <div className="absolute inset-0 z-30 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center p-6 animate-fadeIn overflow-y-auto">
-                                <h2 className="text-3xl font-bold mb-2 text-[#ffd700]">¿Cuántas bazas ganarás?</h2>
-                                <p className="text-slate-400 text-sm mb-6">Ronda {{gameState.round}} — {{gameState.round}} carta{{gameState.round>1?'s':''}}</p>
-                                {{me.bid !== null ? (
-                                    <div className="text-center text-emerald-400 font-bold text-xl animate-pulse flex items-center gap-2"><Check size={{24}}/> Apuesta enviada: {{me.bid}}</div>
-                                ) : (
-                                    <div className="grid grid-cols-4 gap-3 max-w-md w-full">
-                                        <button onClick={{()=>submitBid(0)}} className="col-span-4 bg-blue-700 hover:bg-blue-600 py-4 rounded-xl font-bold text-2xl border-2 border-blue-400 transition-all hover:scale-[1.02]">0</button>
-                                        {{Array.from({{length:gameState.round}},(_,i)=>i+1).map(n=>(
-                                            <button key={{n}} onClick={{()=>submitBid(n)}} className="bg-[#334155] hover:bg-[#475569] aspect-square rounded-xl font-bold text-lg border border-[#64748b] text-white transition-all hover:scale-110 flex items-center justify-center">{{n}}</button>
+                                    )}}
+                                    <div className="mt-6 flex gap-4 text-xs text-slate-500">
+                                        {{gameState.players.map(p=>(
+                                            <div key={{p.uid}} className={{`flex items-center gap-1 ${{p.bid!==null?'text-emerald-400':''}}`}}>
+                                                {{p.bid!==null?<Check size={{12}}/>:<Loader className="animate-spin" size={{12}}/>}} {{p.name}}
+                                            </div>
                                         ))}}
                                     </div>
-                                )}}
-                                <div className="mt-6 flex gap-4 text-xs text-slate-500">
-                                    {{gameState.players.map(p=>(
-                                        <div key={{p.uid}} className={{`flex items-center gap-1 ${{p.bid!==null?'text-emerald-400':''}}`}}>
-                                            {{p.bid!==null?<Check size={{12}}/>:<Loader className="animate-spin" size={{12}}/>}} {{p.name}}
-                                        </div>
-                                    ))}}
                                 </div>
-                            </div>
-                        )}}
+                            )}}
 
-                        {{/* Fase de acción pirata */}}
-                        {{isPAPhase && (
-                            <div className="absolute inset-0 z-30 bg-black/70 backdrop-blur-md flex items-center justify-center p-4">
-                                {{!myPAId ? (
-                                    <div className="bg-[#1e293b] p-6 rounded-2xl border-2 border-[#c5a059] text-center">
-                                        <h3 className="text-xl font-bold text-[#ffd700] mb-2 flex items-center justify-center gap-2"><Gavel/> Decisión del Capitán</h3>
-                                        <p className="text-slate-400 text-sm mb-4">{{gameState.pendingPirateAction && PIRATE_NAMES[gameState.pendingPirateAction.pirateId]?.name}} está decidiendo...</p>
-                                        <Loader className="animate-spin mx-auto text-[#c5a059]" size={{32}}/>
-                                    </div>
-                                ) : (
-                                    <div className="bg-[#1e293b] p-6 rounded-2xl border-2 border-[#ffd700] shadow-[0_0_40px_rgba(255,215,0,0.2)] max-w-sm w-full animate-scaleIn">
-                                        <div className="text-center mb-6">
-                                            <Swords className="mx-auto text-[#c5a059] mb-2" size={{32}}/>
-                                            <h3 className="text-2xl font-bold text-[#ffd700]">{{PIRATE_NAMES[myPAId]?.name}}</h3>
-                                            <p className="text-sm text-slate-400 italic mt-1">{{PIRATE_NAMES[myPAId]?.desc}}</p>
+                            {{/* Fase de acción pirata */}}
+                            {{isPAPhase && (
+                                <div className="absolute inset-0 z-30 bg-black/70 backdrop-blur-md flex items-center justify-center p-4">
+                                    {{!myPAId ? (
+                                        <div className="bg-[#1e293b] p-6 rounded-2xl border-2 border-[#c5a059] text-center">
+                                            <h3 className="text-xl font-bold text-[#ffd700] mb-2 flex items-center justify-center gap-2"><Gavel/> Decisión del Capitán</h3>
+                                            <p className="text-slate-400 text-sm mb-4">{{gameState.pendingPirateAction && PIRATE_NAMES[gameState.pendingPirateAction.pirateId]?.name}} está decidiendo...</p>
+                                            <Loader className="animate-spin mx-auto text-[#c5a059]" size={{32}}/>
                                         </div>
-                                        {{myPAId==='PEDRO' && (
-                                            <div className="flex gap-3">
-                                                <button onClick={{()=>executePirateAction({{mod:-1}})}} className="flex-1 bg-red-900 hover:bg-red-800 text-red-100 p-4 rounded-xl font-bold border border-red-500 text-xl">-1</button>
-                                                <button onClick={{()=>executePirateAction({{mod:0}})}}  className="flex-1 bg-slate-700 hover:bg-slate-600 p-4 rounded-xl font-bold border border-slate-500 text-sm">Mantener</button>
-                                                <button onClick={{()=>executePirateAction({{mod:+1}})}} className="flex-1 bg-green-800 hover:bg-green-700 text-green-100 p-4 rounded-xl font-bold border border-green-500 text-xl">+1</button>
+                                    ) : (
+                                        <div className="bg-[#1e293b] p-6 rounded-2xl border-2 border-[#ffd700] shadow-[0_0_40px_rgba(255,215,0,0.2)] max-w-sm w-full animate-scaleIn">
+                                            <div className="text-center mb-6">
+                                                <Swords className="mx-auto text-[#c5a059] mb-2" size={{32}}/>
+                                                <h3 className="text-2xl font-bold text-[#ffd700]">{{PIRATE_NAMES[myPAId]?.name}}</h3>
+                                                <p className="text-sm text-slate-400 italic mt-1">{{PIRATE_NAMES[myPAId]?.desc}}</p>
                                             </div>
-                                        )}}
-                                        {{myPAId==='ELIAS' && (
-                                            <div className="flex gap-3">
-                                                {{[0,10,20].map(v=><button key={{v}} onClick={{()=>executePirateAction({{bet:v}})}} className="flex-1 bg-blue-800 hover:bg-blue-700 p-4 rounded-xl font-bold border border-blue-500 text-xl">{{v}}</button>)}}
-                                            </div>
-                                        )}}
-                                        {{myPAId==='JAVI' && (
-                                            <button onClick={{()=>executePirateAction({{}})}} className="w-full bg-red-700 hover:bg-red-600 p-4 rounded-xl font-bold border border-red-500 flex items-center justify-center gap-2 text-lg">
-                                                <ArrowDown size={{24}}/> ¡La más baja gana!
-                                            </button>
-                                        )}}
-                                        {{myPAId==='SERGIO' && (
-                                            <div className="grid grid-cols-2 gap-2">
-                                                {{gameState.players.map(p=>(
-                                                    <button key={{p.uid}} onClick={{()=>executePirateAction({{targetId:p.uid}})}} className="bg-slate-700 hover:bg-[#c5a059] hover:text-black p-3 rounded-lg text-sm font-bold border border-slate-600 transition-colors">{{p.name}}</button>
-                                                ))}}
-                                            </div>
-                                        )}}
-                                        {{myPAId==='TORRI' && (
-                                            <div className="space-y-2">
-                                                {{gameState.players.filter(p=>p.uid!==user.uid).map(p=>(
-                                                    <button key={{p.uid}} onClick={{()=>executePirateAction({{targetId:p.uid}})}} className="w-full bg-red-900/50 hover:bg-red-900 p-3 rounded-lg text-sm border border-red-500/50 hover:border-red-500 transition-all flex justify-between items-center">
-                                                        <span className="font-bold">{{p.name}}</span>
-                                                        <span className="text-[10px] opacity-70">{{p.hand.length}} cartas</span>
-                                                    </button>
-                                                ))}}
-                                                <button onClick={{()=>executePirateAction({{}})}} className="w-full py-2 text-slate-400 hover:text-white text-sm underline">No intercambiar</button>
-                                            </div>
-                                        )}}
-                                    </div>
-                                )}}
-                            </div>
-                        )}}
-
-                        {{/* Cartas en la mesa */}}
-                        {{gameState.trickCards.map((play,i) => (
-                            <div key={{i}} className="absolute transition-all duration-500 ease-out z-10" style={{{{
-                                transform: `translate(${{Math.cos(2*Math.PI*i/gameState.trickCards.length)*rx}}px, ${{Math.sin(2*Math.PI*i/gameState.trickCards.length)*ry}}px) rotate(${{(i - gameState.trickCards.length/2)*15}}deg)`
-                            }}}}>
-                                <div className="relative group">
-                                    <Card card={{play.card}} size={{isMobile?'small':'normal'}}/>
-                                    <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] font-bold bg-black/80 text-white px-2 py-0.5 rounded-full whitespace-nowrap border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                                        {{play.playerName}}
-                                    </div>
-                                </div>
-                            </div>
-                        ))}}
-
-                        {{isTableFull && gameState.phase==='PLAYING' && (
-                            <div className="absolute z-20 bg-black/80 backdrop-blur px-8 py-4 rounded-2xl flex items-center gap-4 border border-[#c5a059]/50 shadow-2xl">
-                                <Loader className="animate-spin text-[#c5a059]" size={{32}}/>
-                                <div className="font-bold text-xl text-[#ffd700]">Resolviendo baza...</div>
-                            </div>
-                        )}}
-                    </div>
-
-                    {{/* ── MANO DEL JUGADOR ── */}}
-                    <div className="z-20 relative flex-shrink-0" style={{{{marginRight: showLeaderboard?'240px':'0', transition:'margin 0.3s'}}}}>
-                        <button
-                            onClick={{()=>setIsHandMinimized(!isHandMinimized)}}
-                            className="absolute top-[-28px] right-4 bg-[#1e293b] text-[#c5a059] rounded-t-lg px-3 py-1.5 border-t border-l border-r border-[#334155] text-xs font-bold flex items-center gap-1 shadow-lg z-30"
-                        >
-                            {{isHandMinimized?<ChevronUp size={{14}}/>:<ChevronDown size={{14}}/>}} Mis Cartas ({{me.hand.length}})
-                        </button>
-                        <div className={{`bg-[#1e293b] shadow-[0_-4px_20px_rgba(0,0,0,0.5)] border-t border-[#334155] transition-all duration-300 overflow-hidden ${{isHandMinimized?'h-14':'h-auto'}}`}}>
-                            <div className="flex justify-between items-center px-4 py-2">
-                                <div className="flex items-center gap-3">
-                                    <div className="bg-[#0f172a] px-3 py-1.5 rounded-lg border border-[#334155]">
-                                        <div className="text-[10px] text-slate-400 uppercase tracking-wider">Bazas</div>
-                                        <div className="text-xl font-bold text-[#c5a059] font-mono leading-none">{{me.tricksWon}} <span className="text-slate-600">/</span> {{me.bid===null?'—':me.bid}}</div>
-                                    </div>
-                                    {{me.bid!==null && me.tricksWon===me.bid && (
-                                        <div className="text-green-500 flex items-center gap-1 text-xs font-bold bg-green-900/20 px-2 py-1 rounded border border-green-800/50">
-                                            <Check size={{12}}/> ¡EN CAMINO!
+                                            {{myPAId==='PEDRO' && (
+                                                <div className="flex gap-3">
+                                                    <button onClick={{()=>executePirateAction({{mod:-1}})}} className="flex-1 bg-red-900 hover:bg-red-800 text-red-100 p-4 rounded-xl font-bold border border-red-500 text-xl">-1</button>
+                                                    <button onClick={{()=>executePirateAction({{mod:0}})}}  className="flex-1 bg-slate-700 hover:bg-slate-600 p-4 rounded-xl font-bold border border-slate-500 text-sm">Mantener</button>
+                                                    <button onClick={{()=>executePirateAction({{mod:+1}})}} className="flex-1 bg-green-800 hover:bg-green-700 text-green-100 p-4 rounded-xl font-bold border border-green-500 text-xl">+1</button>
+                                                </div>
+                                            )}}
+                                            {{myPAId==='ELIAS' && (
+                                                <div className="flex gap-3">
+                                                    {{[0,10,20].map(v=><button key={{v}} onClick={{()=>executePirateAction({{bet:v}})}} className="flex-1 bg-blue-800 hover:bg-blue-700 p-4 rounded-xl font-bold border border-blue-500 text-xl">{{v}}</button>)}}
+                                                </div>
+                                            )}}
+                                            {{myPAId==='JAVI' && (
+                                                <button onClick={{()=>executePirateAction({{}})}} className="w-full bg-red-700 hover:bg-red-600 p-4 rounded-xl font-bold border border-red-500 flex items-center justify-center gap-2 text-lg">
+                                                    <ArrowDown size={{24}}/> ¡La más baja gana!
+                                                </button>
+                                            )}}
+                                            {{myPAId==='SERGIO' && (
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    {{gameState.players.map(p=>(
+                                                        <button key={{p.uid}} onClick={{()=>executePirateAction({{targetId:p.uid}})}} className="bg-slate-700 hover:bg-[#c5a059] hover:text-black p-3 rounded-lg text-sm font-bold border border-slate-600 transition-colors">{{p.name}}</button>
+                                                    ))}}
+                                                </div>
+                                            )}}
+                                            {{myPAId==='TORRI' && (
+                                                <div className="space-y-2">
+                                                    {{gameState.players.filter(p=>p.uid!==user.uid).map(p=>(
+                                                        <button key={{p.uid}} onClick={{()=>executePirateAction({{targetId:p.uid}})}} className="w-full bg-red-900/50 hover:bg-red-900 p-3 rounded-lg text-sm border border-red-500/50 hover:border-red-500 transition-all flex justify-between items-center">
+                                                            <span className="font-bold">{{p.name}}</span>
+                                                            <span className="text-[10px] opacity-70">{{p.hand.length}} cartas</span>
+                                                        </button>
+                                                    ))}}
+                                                    <button onClick={{()=>executePirateAction({{}})}} className="w-full py-2 text-slate-400 hover:text-white text-sm underline">No intercambiar</button>
+                                                </div>
+                                            )}}
                                         </div>
                                     )}}
                                 </div>
-                                {{gameState.phase==='PLAYING' && gameState.players[gameState.turnIndex]?.uid===user.uid && (
-                                    <div className="bg-gradient-to-r from-green-600 to-emerald-500 text-white px-5 py-2 rounded-full text-sm font-bold animate-bounce shadow-lg border border-green-400">
-                                        ¡TU TURNO!
-                                    </div>
-                                )}}
-                            </div>
-                            <div className={{`flex justify-center overflow-x-auto px-4 pb-4 gap-2 hide-scrollbar transition-opacity duration-200 ${{isHandMinimized?'opacity-0 pointer-events-none':'opacity-100'}}`}}>
-                                <div className="flex md:-space-x-6 min-w-max pt-2 gap-2 md:gap-0">
-                                    {{me.hand.sort((a,b)=>a.type===b.type?a.value-b.value:a.type.localeCompare(b.type)).map(card=>{{
-                                        const isMyTurn = !isTableFull && gameState.phase==='PLAYING' && gameState.players[gameState.turnIndex]?.uid===user.uid;
-                                        const valid = canPlayCard(card);
-                                        const playable = isMyTurn && valid;
-                                        return (
-                                            <div key={{card.id}} className={{`transition-all duration-300 md:hover:-translate-y-6 md:hover:z-20 relative flex-shrink-0 ${{playable?'md:hover:scale-105':''}}`}}>
-                                                <Card card={{card}} playable={{playable}} onClick={{()=>handleCardClick(card)}}/>
-                                                {{isMyTurn && !valid && (
-                                                    <div className="absolute inset-0 bg-black/60 rounded-xl z-20 flex items-center justify-center backdrop-blur-[1px] border-2 border-red-500/50">
-                                                        <XCircle className="text-red-500 opacity-80" size={{24}}/>
-                                                    </div>
-                                                )}}
-                                            </div>
-                                        );
-                                    }})}}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                            )}}
 
-                    {{/* ── MODAL TIGRESA ── */}}
-                    {{tigressModal && (
-                        <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-                            <div className="bg-[#1e293b] p-8 rounded-2xl border-2 border-orange-500 shadow-2xl max-w-xs w-full text-center">
-                                <Ghost className="mx-auto text-orange-400 mb-3" size={{48}}/>
-                                <h3 className="text-2xl font-bold text-orange-400 mb-1">¡La Tigresa!</h3>
-                                <p className="text-slate-400 text-sm mb-6">¿Cómo la juegas?</p>
-                                <div className="flex gap-4">
-                                    <button onClick={{()=>playCard(tigressModal,{{playedAs:'pirate'}})}} className="flex-1 bg-red-900 hover:bg-red-800 text-white py-6 rounded-xl font-bold border-2 border-red-600 transition-all hover:scale-105 flex flex-col items-center gap-2">
-                                        <Swords size={{28}}/> PIRATA
-                                    </button>
-                                    <button onClick={{()=>playCard(tigressModal,{{playedAs:'escape'}})}} className="flex-1 bg-sky-900 hover:bg-sky-800 text-white py-6 rounded-xl font-bold border-2 border-sky-600 transition-all hover:scale-105 flex flex-col items-center gap-2">
-                                        <Flag size={{28}}/> HUIDA
-                                    </button>
-                                </div>
-                                <button onClick={{()=>setTigressModal(null)}} className="mt-4 text-slate-500 hover:text-slate-300 text-sm underline">Cancelar</button>
-                            </div>
-                        </div>
-                    )}}
-
-                    {{/* ── FIN DE RONDA / PARTIDA ── */}}
-                    {{(gameState.phase==='ROUND_END'||gameState.phase==='GAME_END') && (
-                        <div className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4 backdrop-blur-md">
-                            <div className="w-full max-w-lg bg-[#1e293b] p-8 rounded-2xl border-4 border-[#c5a059] shadow-2xl relative overflow-hidden">
-                                <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-transparent via-[#ffd700] to-transparent"></div>
-                                {{gameState.phase==='GAME_END'?<Trophy className="mx-auto text-[#ffd700] mb-4" size={{64}}/>:<Flag className="mx-auto text-[#c5a059] mb-4" size={{48}}/>}}
-                                <h2 className="text-4xl text-[#ffd700] font-bold text-center mb-1 drop-shadow-md">
-                                    {{gameState.phase==='GAME_END'?'¡FIN DE LA PARTIDA!':`Ronda ${{gameState.round}} — Resultados`}}
-                                </h2>
-                                <p className="text-center text-[#c5a059] mb-6 uppercase tracking-widest text-xs font-bold">Bitácora del Capitán</p>
-                                <div className="space-y-2 mb-6 max-h-[45vh] overflow-y-auto pr-2 custom-scrollbar">
-                                    {{[...gameState.players].sort((a,b)=>b.score-a.score).map((p,i)=>(
-                                        <div key={{i}} className={{`flex justify-between items-center p-4 rounded-xl border ${{p.uid===user.uid?'bg-[#334155] border-[#c5a059]':'bg-[#0f172a] border-[#334155]'}}`}}>
-                                            <div className="flex items-center gap-3">
-                                                <div className={{`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${{i===0?'bg-yellow-500 text-black':i===1?'bg-gray-400 text-black':i===2?'bg-orange-700 text-white':'bg-slate-700 text-slate-300'}}`}}>{{i+1}}</div>
-                                                <div>
-                                                    <div className="font-bold flex items-center gap-2">
-                                                        {{p.name}}
-                                                        <span className={{`text-xs font-bold px-2 py-0.5 rounded-full ${{p.lastRoundScore>=0?'bg-green-900/50 text-green-400':'bg-red-900/50 text-red-400'}}`}}>
-                                                            {{p.lastRoundScore>0?'+':''}}{{p.lastRoundScore}}
-                                                        </span>
-                                                    </div>
-                                                    <div className="text-xs text-slate-400 font-mono">Apuesta: {{p.bid}} | Ganadas: {{p.tricksWon}}</div>
-                                                </div>
-                                            </div>
-                                            <div className="text-3xl font-bold text-[#ffd700] font-mono">{{p.score}}</div>
+                            {{/* Cartas en la mesa */}}
+                            {{gameState.trickCards.map((play,i) => (
+                                <div key={{i}} className="absolute transition-all duration-500 ease-out z-10" style={{{{
+                                    transform: `translate(${{Math.cos(2*Math.PI*i/gameState.trickCards.length)*rx}}px, ${{Math.sin(2*Math.PI*i/gameState.trickCards.length)*ry}}px) rotate(${{(i - gameState.trickCards.length/2)*15}}deg)`
+                                }}}}>
+                                    <div className="relative group">
+                                        <Card card={{play.card}} size={{isMobile?'small':'normal'}}/>
+                                        <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] font-bold bg-black/80 text-white px-2 py-0.5 rounded-full whitespace-nowrap border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                            {{play.playerName}}
                                         </div>
-                                    ))}}
+                                    </div>
                                 </div>
-                                {{gameState.hostId===user.uid && (
-                                    <div className="space-y-3">
-                                        {{gameState.phase!=='GAME_END' && (
-                                            <button
-                                                onClick={{async()=>{{
-                                                    const newDealer=(gameState.dealerIndex+1)%gameState.players.length;
-                                                    await updateDoc(doc(db,ROOM_COLLECTION,`sk_room_${{activeRoomId}}`),{{dealerIndex:newDealer}});
-                                                    startRound(gameState.round+1);
-                                                }}}}
-                                                className="w-full bg-gradient-to-r from-green-600 to-emerald-500 py-4 rounded-xl font-bold text-xl text-white shadow-lg uppercase tracking-wider flex items-center justify-center gap-2 hover:from-green-500 hover:to-emerald-400 transition-all"
-                                            >
-                                                Siguiente Ronda <ArrowUp size={{24}}/>
-                                            </button>
-                                        )}}
-                                        {{gameState.phase==='GAME_END' && (
-                                            <button onClick={{resetToLobby}} className="w-full bg-[#334155] hover:bg-[#475569] py-4 rounded-xl font-bold text-xl text-[#ffd700] border border-[#c5a059] shadow-lg uppercase tracking-wider flex items-center justify-center gap-2 transition-all">
-                                                <Home size={{24}}/> Nueva Partida
-                                            </button>
+                            ))}}
+
+                            {{isTableFull && gameState.phase==='PLAYING' && (
+                                <div className="absolute z-20 bg-black/80 backdrop-blur px-8 py-4 rounded-2xl flex items-center gap-4 border border-[#c5a059]/50 shadow-2xl">
+                                    <Loader className="animate-spin text-[#c5a059]" size={{32}}/>
+                                    <div className="font-bold text-xl text-[#ffd700]">Resolviendo baza...</div>
+                                </div>
+                            )}}
+                        </div>
+
+                        {{/* ── MANO DEL JUGADOR ── */}}
+                        <div className="z-20 relative flex-shrink-0" style={{{{marginRight: showLeaderboard?'240px':'0', transition:'margin 0.3s'}}}}>
+                            <button
+                                onClick={{()=>setIsHandMinimized(!isHandMinimized)}}
+                                className="absolute top-[-28px] right-4 bg-[#1e293b] text-[#c5a059] rounded-t-lg px-3 py-1.5 border-t border-l border-r border-[#334155] text-xs font-bold flex items-center gap-1 shadow-lg z-30"
+                            >
+                                {{isHandMinimized?<ChevronUp size={{14}}/>:<ChevronDown size={{14}}/>}} Mis Cartas ({{me.hand.length}})
+                            </button>
+                            <div className={{`bg-[#1e293b] shadow-[0_-4px_20px_rgba(0,0,0,0.5)] border-t border-[#334155] transition-all duration-300 overflow-hidden ${{isHandMinimized?'h-14':'h-auto'}}`}}>
+                                <div className="flex justify-between items-center px-4 py-2">
+                                    <div className="flex items-center gap-3">
+                                        <div className="bg-[#0f172a] px-3 py-1.5 rounded-lg border border-[#334155]">
+                                            <div className="text-[10px] text-slate-400 uppercase tracking-wider">Bazas</div>
+                                            <div className="text-xl font-bold text-[#c5a059] font-mono leading-none">{{me.tricksWon}} <span className="text-slate-600">/</span> {{me.bid===null?'—':me.bid}}</div>
+                                        </div>
+                                        {{me.bid!==null && me.tricksWon===me.bid && (
+                                            <div className="text-green-500 flex items-center gap-1 text-xs font-bold bg-green-900/20 px-2 py-1 rounded border border-green-800/50">
+                                                <Check size={{12}}/> ¡EN CAMINO!
+                                            </div>
                                         )}}
                                     </div>
-                                )}}
-                                {{gameState.hostId!==user.uid && (
-                                    <div className="bg-[#0f172a] p-4 rounded-xl border border-[#334155] text-center animate-pulse">
-                                        <p className="text-slate-400 text-sm">Esperando al Capitán...</p>
+                                    {{gameState.phase==='PLAYING' && gameState.players[gameState.turnIndex]?.uid===user.uid && (
+                                        <div className="bg-gradient-to-r from-green-600 to-emerald-500 text-white px-5 py-2 rounded-full text-sm font-bold animate-bounce shadow-lg border border-green-400">
+                                            ¡TU TURNO!
+                                        </div>
+                                    )}}
+                                </div>
+                                <div className={{`flex justify-center overflow-x-auto px-4 pb-4 gap-2 hide-scrollbar transition-opacity duration-200 ${{isHandMinimized?'opacity-0 pointer-events-none':'opacity-100'}}`}}>
+                                    <div className="flex md:-space-x-6 min-w-max pt-2 gap-2 md:gap-0">
+                                        {{me.hand.sort((a,b)=>a.type===b.type?a.value-b.value:a.type.localeCompare(b.type)).map(card=>{{
+                                            const isMyTurn = !isTableFull && gameState.phase==='PLAYING' && gameState.players[gameState.turnIndex]?.uid===user.uid;
+                                            const valid = canPlayCard(card);
+                                            const playable = isMyTurn && valid;
+                                            return (
+                                                <div key={{card.id}} className={{`transition-all duration-300 md:hover:-translate-y-6 md:hover:z-20 relative flex-shrink-0 ${{playable?'md:hover:scale-105':''}}`}}>
+                                                    <Card card={{card}} playable={{playable}} onClick={{()=>handleCardClick(card)}}/>
+                                                    {{isMyTurn && !valid && (
+                                                        <div className="absolute inset-0 bg-black/60 rounded-xl z-20 flex items-center justify-center backdrop-blur-[1px] border-2 border-red-500/50">
+                                                            <XCircle className="text-red-500 opacity-80" size={{24}}/>
+                                                        </div>
+                                                    )}}
+                                                </div>
+                                            );
+                                        }})}}
                                     </div>
-                                )}}
+                                </div>
                             </div>
                         </div>
-                    )}}
-                </div>
+
+                        {{/* ── MODAL TIGRESA ── */}}
+                        {{tigressModal && (
+                            <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+                                <div className="bg-[#1e293b] p-8 rounded-2xl border-2 border-orange-500 shadow-2xl max-w-xs w-full text-center">
+                                    <Ghost className="mx-auto text-orange-400 mb-3" size={{48}}/>
+                                    <h3 className="text-2xl font-bold text-orange-400 mb-1">¡La Tigresa!</h3>
+                                    <p className="text-slate-400 text-sm mb-6">¿Cómo la juegas?</p>
+                                    <div className="flex gap-4">
+                                        <button onClick={{()=>playCard(tigressModal,{{playedAs:'pirate'}})}} className="flex-1 bg-red-900 hover:bg-red-800 text-white py-6 rounded-xl font-bold border-2 border-red-600 transition-all hover:scale-105 flex flex-col items-center gap-2">
+                                            <Swords size={{28}}/> PIRATA
+                                        </button>
+                                        <button onClick={{()=>playCard(tigressModal,{{playedAs:'escape'}})}} className="flex-1 bg-sky-900 hover:bg-sky-800 text-white py-6 rounded-xl font-bold border-2 border-sky-600 transition-all hover:scale-105 flex flex-col items-center gap-2">
+                                            <Flag size={{28}}/> HUIDA
+                                        </button>
+                                    </div>
+                                    <button onClick={{()=>setTigressModal(null)}} className="mt-4 text-slate-500 hover:text-slate-300 text-sm underline">Cancelar</button>
+                                </div>
+                            </div>
+                        )}}
+
+                        {{/* ── FIN DE RONDA / PARTIDA ── */}}
+                        {{(gameState.phase==='ROUND_END'||gameState.phase==='GAME_END') && (
+                            <div className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4 backdrop-blur-md">
+                                <div className="w-full max-w-lg bg-[#1e293b] p-8 rounded-2xl border-4 border-[#c5a059] shadow-2xl relative overflow-hidden">
+                                    <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-transparent via-[#ffd700] to-transparent"></div>
+                                    {{gameState.phase==='GAME_END'?<Trophy className="mx-auto text-[#ffd700] mb-4" size={{64}}/>:<Flag className="mx-auto text-[#c5a059] mb-4" size={{48}}/>}}
+                                    <h2 className="text-4xl text-[#ffd700] font-bold text-center mb-1 drop-shadow-md">
+                                        {{gameState.phase==='GAME_END'?'¡FIN DE LA PARTIDA!':`Ronda ${{gameState.round}} — Resultados`}}
+                                    </h2>
+                                    <p className="text-center text-[#c5a059] mb-6 uppercase tracking-widest text-xs font-bold">Bitácora del Capitán</p>
+                                    <div className="space-y-2 mb-6 max-h-[45vh] overflow-y-auto pr-2 custom-scrollbar">
+                                        {{[...gameState.players].sort((a,b)=>b.score-a.score).map((p,i)=>(
+                                            <div key={{i}} className={{`flex justify-between items-center p-4 rounded-xl border ${{p.uid===user.uid?'bg-[#334155] border-[#c5a059]':'bg-[#0f172a] border-[#334155]'}}`}}>
+                                                <div className="flex items-center gap-3">
+                                                    <div className={{`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${{i===0?'bg-yellow-500 text-black':i===1?'bg-gray-400 text-black':i===2?'bg-orange-700 text-white':'bg-slate-700 text-slate-300'}}`}}>{{i+1}}</div>
+                                                    <div>
+                                                        <div className="font-bold flex items-center gap-2">
+                                                            {{p.name}}
+                                                            <span className={{`text-xs font-bold px-2 py-0.5 rounded-full ${{p.lastRoundScore>=0?'bg-green-900/50 text-green-400':'bg-red-900/50 text-red-400'}}`}}>
+                                                                {{p.lastRoundScore>0?'+':''}}{{p.lastRoundScore}}
+                                                            </span>
+                                                        </div>
+                                                        <div className="text-xs text-slate-400 font-mono">Apuesta: {{p.bid}} | Ganadas: {{p.tricksWon}}</div>
+                                                    </div>
+                                                </div>
+                                                <div className="text-3xl font-bold text-[#ffd700] font-mono">{{p.score}}</div>
+                                            </div>
+                                        ))}}
+                                    </div>
+                                    {{gameState.hostId===user.uid && (
+                                        <div className="space-y-3">
+                                            {{gameState.phase!=='GAME_END' && (
+                                                <button
+                                                    onClick={{async()=>{{
+                                                        const newDealer=(gameState.dealerIndex+1)%gameState.players.length;
+                                                        await updateDoc(doc(db,ROOM_COLLECTION,`sk_room_${{activeRoomId}}`),{{dealerIndex:newDealer}});
+                                                        startRound(gameState.round+1);
+                                                    }}}}
+                                                    className="w-full bg-gradient-to-r from-green-600 to-emerald-500 py-4 rounded-xl font-bold text-xl text-white shadow-lg uppercase tracking-wider flex items-center justify-center gap-2 hover:from-green-500 hover:to-emerald-400 transition-all"
+                                                >
+                                                    Siguiente Ronda <ArrowUp size={{24}}/>
+                                                </button>
+                                            )}}
+                                            {{gameState.phase==='GAME_END' && (
+                                                <button onClick={{resetToLobby}} className="w-full bg-[#334155] hover:bg-[#475569] py-4 rounded-xl font-bold text-xl text-[#ffd700] border border-[#c5a059] shadow-lg uppercase tracking-wider flex items-center justify-center gap-2 transition-all">
+                                                    <Home size={{24}}/> Nueva Partida
+                                                </button>
+                                            )}}
+                                        </div>
+                                    )}}
+                                    {{gameState.hostId!==user.uid && (
+                                        <div className="bg-[#0f172a] p-4 rounded-xl border border-[#334155] text-center animate-pulse">
+                                            <p className="text-slate-400 text-sm">Esperando al Capitán...</p>
+                                        </div>
+                                    )}}
+                                </div>
+                            </div>
+                        )}}
+                    </div>
+                );
+            }};
+
+            return (
+                <>
+                    {{renderMainContent()}}
+                    {{showHelp && <HelpModal onClose={{() => setShowHelp(false)}} />}}
+                </>
             );
         }}
 
