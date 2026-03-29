@@ -280,57 +280,41 @@ html_code = f"""<!DOCTYPE html>
             );
         }};
 
-        // COMPONENTE DE CUENTA ATRÁS
-        const CountdownOverlay = ({{ trickCards, players, winnerId }}) => {{
+        // BANNER GANADOR — aparece ENCIMA de la zona de oponentes, no tapa las cartas
+        const WinnerBanner = ({{ players, winnerId }}) => {{
             const [count, setCount] = useState(3);
+            const circumference = 2 * Math.PI * 18;
 
             useEffect(() => {{
+                setCount(3);
                 const interval = setInterval(() => {{
-                    setCount(prev => prev <= 1 ? 1 : prev - 1);
+                    setCount(prev => (prev <= 1 ? 1 : prev - 1));
                 }}, 1000);
                 return () => clearInterval(interval);
-            }}, []);
+            }}, [winnerId]);
 
             const winnerName = winnerId === 'KRAKEN'
-                ? '💀 ¡Kraken! Nadie gana'
-                : players.find(p => p.uid === winnerId)?.name || '?';
-
-            // Pre-calcular quien gana para mostrarlo
-            const winnerPlay = trickCards.find(p => p.playerId === winnerId);
+                ? '💀 Kraken — Nadie gana'
+                : (players.find(p => p.uid === winnerId)?.name || '?');
 
             return (
-                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center pointer-events-none">
-                    {{/* Highlight ganador */}}
-                    <div className="bg-black/70 backdrop-blur-sm rounded-2xl px-8 py-4 border-2 border-[#ffd700] shadow-[0_0_40px_rgba(255,215,0,0.4)] flex flex-col items-center gap-3 animate-scaleIn">
-                        <div className="flex items-center gap-3">
-                            <Trophy className="text-[#ffd700]" size={{28}} />
-                            <div className="text-center">
-                                <div className="text-xs text-slate-400 uppercase tracking-widest mb-0.5">Gana la baza</div>
-                                <div className="text-2xl font-bold text-[#ffd700]">{{winnerName}}</div>
-                            </div>
-                            <Trophy className="text-[#ffd700]" size={{28}} />
-                        </div>
-
-                        {{/* Cuenta atrás circular */}}
-                        <div className="relative w-14 h-14 flex items-center justify-center">
-                            <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 46 46">
-                                <circle cx="23" cy="23" r="20" fill="none" stroke="#1e293b" strokeWidth="4"/>
-                                <circle
-                                    cx="23" cy="23" r="20"
-                                    fill="none"
-                                    stroke="#ffd700"
-                                    strokeWidth="4"
-                                    strokeDasharray="126"
-                                    strokeDashoffset="0"
-                                    strokeLinecap="round"
-                                    style={{{{
-                                        animation: 'countdown 3s linear forwards',
-                                        strokeDashoffset: `${{126 - (count/3)*126}}`
-                                    }}}}
-                                />
-                            </svg>
-                            <span className="text-3xl font-bold text-white z-10">{{count}}</span>
-                        </div>
+                <div className="flex items-center gap-3 bg-[#1e1a0e] border-2 border-[#ffd700] rounded-2xl px-5 py-2 shadow-[0_0_24px_rgba(255,215,0,0.4)] animate-scaleIn pointer-events-none select-none">
+                    <Trophy className="text-[#ffd700] flex-shrink-0" size={{20}} />
+                    <div className="text-center leading-tight">
+                        <div className="text-[9px] text-slate-400 uppercase tracking-widest">Gana la baza</div>
+                        <div className="text-lg font-bold text-[#ffd700]">{{winnerName}}</div>
+                    </div>
+                    <div className="relative w-10 h-10 flex-shrink-0 flex items-center justify-center">
+                        <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 44 44">
+                            <circle cx="22" cy="22" r="18" fill="none" stroke="#334155" strokeWidth="3.5"/>
+                            <circle cx="22" cy="22" r="18" fill="none" stroke="#ffd700" strokeWidth="3.5"
+                                strokeDasharray={{circumference}}
+                                strokeDashoffset={{circumference - (count / 3) * circumference}}
+                                strokeLinecap="round"
+                                style={{{{ transition: 'stroke-dashoffset 0.9s linear' }}}}
+                            />
+                        </svg>
+                        <span className="text-base font-bold text-white relative z-10">{{count}}</span>
                     </div>
                 </div>
             );
@@ -488,54 +472,39 @@ html_code = f"""<!DOCTYPE html>
             }}, [gameState?.phase, tigressModal]);
 
             // ── LÓGICA DE CUENTA ATRÁS ──────────────────────────────────────
-            // Cuando todas las cartas están en la mesa (fase TRICK_RESOLVING),
-            // calculamos el ganador localmente y lo mostramos 3 segundos.
-            // El HOST además espera esos 3s y luego ejecuta resolveTrick.
-            useEffect(() => {{
-                if (!gameState || !user) return;
-
-                // Fase TRICK_RESOLVING: todas las cartas visibles, mostramos ganador
-                if (gameState.phase === 'TRICK_RESOLVING') {{
-                    // Calcular ganador localmente para mostrarlo a todos
-                    const winnerId = determineTrickWinner(gameState.trickCards, gameState.nextTrickLowWins) || gameState.trickCards[0]?.playerId;
-                    setTrickWinnerId(winnerId);
-
-                    // Sólo el host resuelve tras los 3 segundos
-                    if (gameState.hostId === user.uid && !resolvingTrickRef.current) {{
-                        resolvingTrickRef.current = true;
-                        const timer = setTimeout(() => {{
-                            setTrickWinnerId(null);
-                            resolveTrick(gameState.trickCards).finally(() => {{
-                                resolvingTrickRef.current = false;
-                            }});
-                        }}, 3000);
-                        return () => clearTimeout(timer);
-                    }}
-                }} else {{
-                    // Si salimos de TRICK_RESOLVING, limpiamos el ganador visual
-                    setTrickWinnerId(null);
-                }}
-            }}, [gameState?.phase, gameState?.trickCards?.length]);
-
-            // El host pone la fase TRICK_RESOLVING cuando todas las cartas están jugadas
+            // El host detecta mesa llena en PLAYING y pone TRICK_RESOLVING.
+            // Todos ven las cartas + banner 3s. Luego el host llama resolveTrick.
             useEffect(() => {{
                 if (!gameState || !user) return;
                 if (gameState.hostId !== user.uid) return;
                 if (
                     gameState.phase === 'PLAYING' &&
-                    gameState.trickCards.length >= gameState.players.length &&
-                    !resolvingTrickRef.current
+                    gameState.trickCards.length > 0 &&
+                    gameState.trickCards.length >= gameState.players.length
                 ) {{
-                    resolvingTrickRef.current = true;
                     updateDoc(doc(db, ROOM_COLLECTION, `sk_room_${{activeRoomId}}`), {{
                         phase: 'TRICK_RESOLVING'
-                    }}).then(() => {{
-                        resolvingTrickRef.current = false;
-                    }}).catch(() => {{
-                        resolvingTrickRef.current = false;
-                    }});
+                    }}).catch(e => console.error('TRICK_RESOLVING update failed', e));
                 }}
             }}, [gameState?.trickCards?.length, gameState?.phase]);
+
+            useEffect(() => {{
+                if (!gameState || !user) return;
+                if (gameState.phase === 'TRICK_RESOLVING') {{
+                    const winnerId = determineTrickWinner(gameState.trickCards, gameState.nextTrickLowWins)
+                        || gameState.trickCards[0]?.playerId;
+                    setTrickWinnerId(winnerId || null);
+                    // Solo el host resuelve, tras 3 segundos
+                    if (gameState.hostId === user.uid) {{
+                        const timer = setTimeout(() => {{
+                            resolveTrick(gameState.trickCards);
+                        }}, 3000);
+                        return () => clearTimeout(timer);
+                    }}
+                }} else {{
+                    setTrickWinnerId(null);
+                }}
+            }}, [gameState?.phase]);
 
             const roomRef = () => doc(db, ROOM_COLLECTION, `sk_room_${{activeRoomId}}`);
 
@@ -948,6 +917,13 @@ html_code = f"""<!DOCTYPE html>
                             </div>
                         )}}
 
+                        {{/* ── BANNER GANADOR (encima de oponentes) ── */}}
+                        {{isResolvingPhase && trickWinnerId && (
+                            <div className="flex justify-center py-2 flex-shrink-0" style={{{{marginRight: showLeaderboard?'240px':'0', transition:'margin 0.3s'}}}}>
+                                <WinnerBanner players={{gameState.players}} winnerId={{trickWinnerId}} />
+                            </div>
+                        )}}
+
                         {{/* ── OPONENTES ── */}}
                         <div className="flex justify-center gap-3 p-3 overflow-x-auto flex-shrink-0" style={{{{marginRight: showLeaderboard?'240px':'0', transition:'margin 0.3s'}}}}>
                             {{opponents.map(p => {{
@@ -1088,14 +1064,7 @@ html_code = f"""<!DOCTYPE html>
                                 );
                             }})}}
 
-                            {{/* ── CUENTA ATRÁS (fase TRICK_RESOLVING) ── */}}
-                            {{isResolvingPhase && trickWinnerId && (
-                                <CountdownOverlay
-                                    trickCards={{gameState.trickCards}}
-                                    players={{gameState.players}}
-                                    winnerId={{trickWinnerId}}
-                                />
-                            )}}
+
                         </div>
 
                         {{/* ── MANO DEL JUGADOR ── */}}
