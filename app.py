@@ -78,8 +78,10 @@ html_code = f"""<!DOCTYPE html>
         #root {{ height: 100vh; overflow: hidden; }}
         @keyframes fadeIn {{ from {{ opacity:0; transform:translateY(10px); }} to {{ opacity:1; transform:translateY(0); }} }}
         @keyframes scaleIn {{ from {{ opacity:0; transform:scale(0.9); }} to {{ opacity:1; transform:scale(1); }} }}
+        @keyframes countdown {{ from {{ stroke-dashoffset: 0; }} to {{ stroke-dashoffset: 283; }} }}
         .animate-fadeIn {{ animation: fadeIn 0.3s ease-out; }}
         .animate-scaleIn {{ animation: scaleIn 0.3s ease-out; }}
+        .countdown-ring {{ animation: countdown 3s linear forwards; }}
     </style>
 </head>
 <body>
@@ -278,6 +280,62 @@ html_code = f"""<!DOCTYPE html>
             );
         }};
 
+        // COMPONENTE DE CUENTA ATRÁS
+        const CountdownOverlay = ({{ trickCards, players, winnerId }}) => {{
+            const [count, setCount] = useState(3);
+
+            useEffect(() => {{
+                const interval = setInterval(() => {{
+                    setCount(prev => prev <= 1 ? 1 : prev - 1);
+                }}, 1000);
+                return () => clearInterval(interval);
+            }}, []);
+
+            const winnerName = winnerId === 'KRAKEN'
+                ? '💀 ¡Kraken! Nadie gana'
+                : players.find(p => p.uid === winnerId)?.name || '?';
+
+            // Pre-calcular quien gana para mostrarlo
+            const winnerPlay = trickCards.find(p => p.playerId === winnerId);
+
+            return (
+                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center pointer-events-none">
+                    {{/* Highlight ganador */}}
+                    <div className="bg-black/70 backdrop-blur-sm rounded-2xl px-8 py-4 border-2 border-[#ffd700] shadow-[0_0_40px_rgba(255,215,0,0.4)] flex flex-col items-center gap-3 animate-scaleIn">
+                        <div className="flex items-center gap-3">
+                            <Trophy className="text-[#ffd700]" size={{28}} />
+                            <div className="text-center">
+                                <div className="text-xs text-slate-400 uppercase tracking-widest mb-0.5">Gana la baza</div>
+                                <div className="text-2xl font-bold text-[#ffd700]">{{winnerName}}</div>
+                            </div>
+                            <Trophy className="text-[#ffd700]" size={{28}} />
+                        </div>
+
+                        {{/* Cuenta atrás circular */}}
+                        <div className="relative w-14 h-14 flex items-center justify-center">
+                            <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 46 46">
+                                <circle cx="23" cy="23" r="20" fill="none" stroke="#1e293b" strokeWidth="4"/>
+                                <circle
+                                    cx="23" cy="23" r="20"
+                                    fill="none"
+                                    stroke="#ffd700"
+                                    strokeWidth="4"
+                                    strokeDasharray="126"
+                                    strokeDashoffset="0"
+                                    strokeLinecap="round"
+                                    style={{{{
+                                        animation: 'countdown 3s linear forwards',
+                                        strokeDashoffset: `${{126 - (count/3)*126}}`
+                                    }}}}
+                                />
+                            </svg>
+                            <span className="text-3xl font-bold text-white z-10">{{count}}</span>
+                        </div>
+                    </div>
+                </div>
+            );
+        }};
+
         // MODAL DE AYUDA / MANUAL DEL PIRATA
         const HelpModal = ({{ onClose }}) => (
             <div className="fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-4 backdrop-blur-sm animate-fadeIn">
@@ -391,6 +449,8 @@ html_code = f"""<!DOCTYPE html>
             const [showHelp,        setShowHelp]        = useState(false);
             const [tigressModal,    setTigressModal]    = useState(null);
             const [isHandMinimized, setIsHandMinimized] = useState(false);
+            // Estado local para la cuenta atrás (sólo visual, no en Firebase)
+            const [trickWinnerId,   setTrickWinnerId]   = useState(null);
             const resolvingTrickRef = useRef(false);
             const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
@@ -427,19 +487,54 @@ html_code = f"""<!DOCTYPE html>
                 setIsHandMinimized(gameState.phase === 'PIRATE_ACTION' || !!tigressModal);
             }}, [gameState?.phase, tigressModal]);
 
-            // Host resuelve el truco automáticamente
+            // ── LÓGICA DE CUENTA ATRÁS ──────────────────────────────────────
+            // Cuando todas las cartas están en la mesa (fase TRICK_RESOLVING),
+            // calculamos el ganador localmente y lo mostramos 3 segundos.
+            // El HOST además espera esos 3s y luego ejecuta resolveTrick.
+            useEffect(() => {{
+                if (!gameState || !user) return;
+
+                // Fase TRICK_RESOLVING: todas las cartas visibles, mostramos ganador
+                if (gameState.phase === 'TRICK_RESOLVING') {{
+                    // Calcular ganador localmente para mostrarlo a todos
+                    const winnerId = determineTrickWinner(gameState.trickCards, gameState.nextTrickLowWins) || gameState.trickCards[0]?.playerId;
+                    setTrickWinnerId(winnerId);
+
+                    // Sólo el host resuelve tras los 3 segundos
+                    if (gameState.hostId === user.uid && !resolvingTrickRef.current) {{
+                        resolvingTrickRef.current = true;
+                        const timer = setTimeout(() => {{
+                            setTrickWinnerId(null);
+                            resolveTrick(gameState.trickCards).finally(() => {{
+                                resolvingTrickRef.current = false;
+                            }});
+                        }}, 3000);
+                        return () => clearTimeout(timer);
+                    }}
+                }} else {{
+                    // Si salimos de TRICK_RESOLVING, limpiamos el ganador visual
+                    setTrickWinnerId(null);
+                }}
+            }}, [gameState?.phase, gameState?.trickCards?.length]);
+
+            // El host pone la fase TRICK_RESOLVING cuando todas las cartas están jugadas
             useEffect(() => {{
                 if (!gameState || !user) return;
                 if (gameState.hostId !== user.uid) return;
-                if (gameState.phase === 'PLAYING' && gameState.trickCards.length >= gameState.players.length) {
-                    if (!resolvingTrickRef.current) {
+                if (
+                    gameState.phase === 'PLAYING' &&
+                    gameState.trickCards.length >= gameState.players.length &&
+                    !resolvingTrickRef.current
+                ) {{
                     resolvingTrickRef.current = true;
-                    // Primero marcamos TRICK_RESOLVING para que todos vean las cartas
-                    updateDoc(roomRef(), { phase: 'TRICK_RESOLVING' }).then(() => {
-                        setTimeout(() => resolveTrick(gameState.trickCards).finally(() => resolvingTrickRef.current = false), 3000);
-                    });
-                }
-            }
+                    updateDoc(doc(db, ROOM_COLLECTION, `sk_room_${{activeRoomId}}`), {{
+                        phase: 'TRICK_RESOLVING'
+                    }}).then(() => {{
+                        resolvingTrickRef.current = false;
+                    }}).catch(() => {{
+                        resolvingTrickRef.current = false;
+                    }});
+                }}
             }}, [gameState?.trickCards?.length, gameState?.phase]);
 
             const roomRef = () => doc(db, ROOM_COLLECTION, `sk_room_${{activeRoomId}}`);
@@ -798,6 +893,7 @@ html_code = f"""<!DOCTYPE html>
                 const opponents = [...gameState.players.slice(myIndex+1), ...gameState.players.slice(0, myIndex)];
                 const isTableFull = gameState.trickCards.length >= gameState.players.length;
                 const isPAPhase   = gameState.phase === 'PIRATE_ACTION';
+                const isResolvingPhase = gameState.phase === 'TRICK_RESOLVING';
                 const myPAId      = isPAPhase && gameState.pendingPirateAction?.winnerId === user.uid ? gameState.pendingPirateAction.pirateId : null;
                 const rx = isMobile ? 50 : 80, ry = isMobile ? 40 : 60;
 
@@ -856,10 +952,13 @@ html_code = f"""<!DOCTYPE html>
                         <div className="flex justify-center gap-3 p-3 overflow-x-auto flex-shrink-0" style={{{{marginRight: showLeaderboard?'240px':'0', transition:'margin 0.3s'}}}}>
                             {{opponents.map(p => {{
                                 const isActive = gameState.players[gameState.turnIndex]?.uid === p.uid;
+                                // Durante TRICK_RESOLVING, destacamos al ganador
+                                const isWinner = isResolvingPhase && trickWinnerId === p.uid;
                                 return (
-                                    <div key={{p.uid}} className={{`relative flex flex-col items-center min-w-[80px] transition-all duration-300 ${{isActive?'scale-110 z-10':'opacity-70'}}`}}>
-                                        {{isActive && <div className="absolute -top-6 text-[#ffd700] animate-bounce"><Swords size={{18}}/></div>}}
-                                        <div className={{`bg-[#1e293b] p-2 rounded-xl border-2 ${{isActive?'border-[#ffd700] shadow-[0_0_15px_rgba(255,215,0,0.3)]':'border-[#334155]'}}`}}>
+                                    <div key={{p.uid}} className={{`relative flex flex-col items-center min-w-[80px] transition-all duration-300 ${{isActive&&!isResolvingPhase?'scale-110 z-10':isWinner?'scale-125 z-10':'opacity-70'}}`}}>
+                                        {{isActive && !isResolvingPhase && <div className="absolute -top-6 text-[#ffd700] animate-bounce"><Swords size={{18}}/></div>}}
+                                        {{isWinner && <div className="absolute -top-6 text-[#ffd700] animate-bounce"><Trophy size={{18}}/></div>}}
+                                        <div className={{`bg-[#1e293b] p-2 rounded-xl border-2 ${{isWinner?'border-[#ffd700] shadow-[0_0_20px_rgba(255,215,0,0.5)]':isActive&&!isResolvingPhase?'border-[#ffd700] shadow-[0_0_15px_rgba(255,215,0,0.3)]':'border-[#334155]'}}`}}>
                                             <div className="font-bold truncate w-full text-center text-xs mb-1 text-white">{{p.name}}</div>
                                             <div className="text-xs text-[#c5a059] font-mono bg-[#0f172a] rounded px-2 py-0.5 text-center mb-1">
                                                 {{p.tricksWon}} / {{p.bid===null?'?':p.bid}}
@@ -969,24 +1068,33 @@ html_code = f"""<!DOCTYPE html>
                             )}}
 
                             {{/* Cartas en la mesa */}}
-                            {{gameState.trickCards.map((play,i) => (
-                                <div key={{i}} className="absolute transition-all duration-500 ease-out z-10" style={{{{
-                                    transform: `translate(${{Math.cos(2*Math.PI*i/gameState.trickCards.length)*rx}}px, ${{Math.sin(2*Math.PI*i/gameState.trickCards.length)*ry}}px) rotate(${{(i - gameState.trickCards.length/2)*15}}deg)`
-                                }}}}>
-                                    <div className="relative group">
-                                        <Card card={{play.card}} size={{isMobile?'small':'normal'}}/>
-                                        <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] font-bold bg-black/80 text-white px-2 py-0.5 rounded-full whitespace-nowrap border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                                            {{play.playerName}}
+                            {{gameState.trickCards.map((play,i) => {{
+                                const isWinnerCard = isResolvingPhase && trickWinnerId && play.playerId === trickWinnerId;
+                                return (
+                                    <div key={{i}} className="absolute transition-all duration-500 ease-out z-10" style={{{{
+                                        transform: `translate(${{Math.cos(2*Math.PI*i/gameState.trickCards.length)*rx}}px, ${{Math.sin(2*Math.PI*i/gameState.trickCards.length)*ry}}px) rotate(${{(i - gameState.trickCards.length/2)*15}}deg) ${{isWinnerCard ? 'scale(1.15)' : ''}}`
+                                    }}}}>
+                                        <div className="relative group">
+                                            <Card card={{play.card}} size={{isMobile?'small':'normal'}}/>
+                                            {{/* Halo dorado en la carta ganadora */}}
+                                            {{isWinnerCard && (
+                                                <div className="absolute inset-0 rounded-xl ring-4 ring-[#ffd700] shadow-[0_0_20px_rgba(255,215,0,0.8)] pointer-events-none z-30 animate-pulse"></div>
+                                            )}}
+                                            <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] font-bold bg-black/80 text-white px-2 py-0.5 rounded-full whitespace-nowrap border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                                {{play.playerName}}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            ))}}
+                                );
+                            }})}}
 
-                            {{isTableFull && gameState.phase==='PLAYING' && (
-                                <div className="absolute z-20 bg-black/80 backdrop-blur px-8 py-4 rounded-2xl flex items-center gap-4 border border-[#c5a059]/50 shadow-2xl">
-                                    <Loader className="animate-spin text-[#c5a059]" size={{32}}/>
-                                    <div className="font-bold text-xl text-[#ffd700]">Resolviendo baza...</div>
-                                </div>
+                            {{/* ── CUENTA ATRÁS (fase TRICK_RESOLVING) ── */}}
+                            {{isResolvingPhase && trickWinnerId && (
+                                <CountdownOverlay
+                                    trickCards={{gameState.trickCards}}
+                                    players={{gameState.players}}
+                                    winnerId={{trickWinnerId}}
+                                />
                             )}}
                         </div>
 
