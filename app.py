@@ -431,12 +431,15 @@ html_code = f"""<!DOCTYPE html>
             useEffect(() => {{
                 if (!gameState || !user) return;
                 if (gameState.hostId !== user.uid) return;
-                if (gameState.phase === 'PLAYING' && gameState.trickCards.length >= gameState.players.length) {{
-                    if (!resolvingTrickRef.current) {{
-                        resolvingTrickRef.current = true;
+                if (gameState.phase === 'PLAYING' && gameState.trickCards.length >= gameState.players.length) {
+                    if (!resolvingTrickRef.current) {
+                    resolvingTrickRef.current = true;
+                    // Primero marcamos TRICK_RESOLVING para que todos vean las cartas
+                    updateDoc(roomRef(), { phase: 'TRICK_RESOLVING' }).then(() => {
                         setTimeout(() => resolveTrick(gameState.trickCards).finally(() => resolvingTrickRef.current = false), 3000);
-                    }}
-                }}
+                    });
+                }
+            }
             }}, [gameState?.trickCards?.length, gameState?.phase]);
 
             const roomRef = () => doc(db, ROOM_COLLECTION, `sk_room_${{activeRoomId}}`);
