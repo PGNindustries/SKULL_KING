@@ -66,6 +66,8 @@ html_code = f"""<!DOCTYPE html>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Skull King</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
@@ -237,45 +239,271 @@ html_code = f"""<!DOCTYPE html>
             </svg>
         );
 
+        // =====================================================================
+        // CARD COMPONENT — Diseño ilustrado estilo Skull King original
+        // =====================================================================
+        const CARD_ART = {{
+            // Palos — gradientes temáticos + emoji ilustración central
+            SUIT_PARROT:  {{ bg: 'linear-gradient(160deg,#134e2a 0%,#1a6b36 40%,#0d3d1f 100%)', frame: '#4ade80', shine: '#86efac', emoji: '🦜', accent: '#bbf7d0' }},
+            SUIT_MAP:     {{ bg: 'linear-gradient(160deg,#1e1b5e 0%,#3730a3 40%,#0f0e3a 100%)', frame: '#818cf8', shine: '#c7d2fe', emoji: '🗺️', accent: '#e0e7ff' }},
+            SUIT_CHEST:   {{ bg: 'linear-gradient(160deg,#78350f 0%,#b45309 40%,#451a03 100%)', frame: '#fbbf24', shine: '#fde68a', emoji: '💰', accent: '#fef3c7' }},
+            SUIT_TRUMP:   {{ bg: 'linear-gradient(160deg,#0a0a0a 0%,#1c1917 40%,#000000 100%)', frame: '#ffd700', shine: '#fffbeb', emoji: '💀', accent: '#fef9c3' }},
+            // Especiales
+            ESCAPE:       {{ bg: 'linear-gradient(160deg,#0c4a6e 0%,#0369a1 40%,#082f49 100%)', frame: '#7dd3fc', shine: '#e0f2fe', emoji: '🏳️', accent: '#bae6fd' }},
+            SKULLKING:    {{ bg: 'linear-gradient(160deg,#1a0a00 0%,#3d1a00 30%,#000000 100%)', frame: '#ffd700', shine: '#fef08a', emoji: '👑', accent: '#fef9c3' }},
+            MERMAID:      {{ bg: 'linear-gradient(160deg,#0a3d52 0%,#0e7490 40%,#052e3d 100%)', frame: '#22d3ee', shine: '#a5f3fc', emoji: '🧜', accent: '#cffafe' }},
+            TIGRESS:      {{ bg: 'linear-gradient(160deg,#431407 0%,#9a3412 40%,#1c0701 100%)', frame: '#fb923c', shine: '#fed7aa', emoji: '🐅', accent: '#ffedd5' }},
+            KRAKEN:       {{ bg: 'linear-gradient(160deg,#022c22 0%,#065f46 40%,#011916 100%)', frame: '#34d399', shine: '#6ee7b7', emoji: '🐙', accent: '#d1fae5' }},
+            WHALE:        {{ bg: 'linear-gradient(160deg,#0c1445 0%,#1d3461 40%,#060a1f 100%)', frame: '#60a5fa', shine: '#bfdbfe', emoji: '🐋', accent: '#dbeafe' }},
+            COINS:        {{ bg: 'linear-gradient(160deg,#422006 0%,#854d0e 40%,#1c0a00 100%)', frame: '#facc15', shine: '#fef08a', emoji: '🤝', accent: '#fefce8' }},
+            PIRATE:       {{ bg: 'linear-gradient(160deg,#3b0014 0%,#7f1d1d 40%,#1a000a 100%)', frame: '#f87171', shine: '#fecaca', emoji: '⚔️', accent: '#fee2e2' }},
+        }};
+
+        const CardSVGDefs = () => (
+            <svg width="0" height="0" style={{{{position:'absolute'}}}}>
+                <defs>
+                    <filter id="card-glow-gold">
+                        <feGaussianBlur stdDeviation="3" result="blur"/>
+                        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
+                    <filter id="card-inner-shadow">
+                        <feOffset dx="0" dy="1"/>
+                        <feGaussianBlur stdDeviation="2"/>
+                        <feComposite operator="out" in="SourceGraphic"/>
+                    </filter>
+                </defs>
+            </svg>
+        );
+
         const Card = ({{ card, onClick, playable = false, size = 'normal', hidden = false }}) => {{
+            const sm = size === 'small';
+
+            // Carta oculta (dorso)
             if (hidden) return (
-                <div className={{`${{size==='small'?'w-10 h-14':'w-24 h-36'}} bg-[#1a1a2e] border-2 border-[#c5a059] rounded-lg shadow-lg flex items-center justify-center flex-shrink-0`}}>
-                    <Skull className="text-[#c5a059] opacity-30" size={{32}} />
+                <div style={{{{
+                    width: sm?'40px':'96px', height: sm?'56px':'144px',
+                    background: 'linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%)',
+                    borderRadius: sm?'5px':'10px',
+                    border: '2px solid #c5a059',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1)',
+                    display:'flex', alignItems:'center', justifyContent:'center',
+                    flexShrink:0, position:'relative', overflow:'hidden'
+                }}}}>
+                    {{/* Patrón de fondo del dorso */}}
+                    <div style={{{{
+                        position:'absolute', inset:0, opacity:0.15,
+                        backgroundImage: `repeating-linear-gradient(45deg, #c5a059 0px, #c5a059 1px, transparent 1px, transparent 8px),
+                                         repeating-linear-gradient(-45deg, #c5a059 0px, #c5a059 1px, transparent 1px, transparent 8px)`
+                    }}}}/>
+                    <Skull style={{{{color:'#c5a059', opacity:0.5}}}} size={{sm?14:28}}/>
                 </div>
             );
 
+            // Determinar arte según tipo
             const isSuit = card.type === CARD_TYPES.SUIT;
-            const sc = isSuit ? SUITS[card.suit] : null;
-            let bg='bg-slate-700', tc='text-white', bc='border-slate-600', Icon=HelpCircle, label='';
+            let art, label, subLabel, Icon, numValue;
 
             if (isSuit) {{
-                bg=sc.color; tc=sc.text; bc=sc.border; Icon=sc.icon; label=card.value;
+                const artKey = `SUIT_${{card.suit}}`;
+                art = CARD_ART[artKey];
+                numValue = card.value;
+                label = SUITS[card.suit].label;
+                Icon = SUITS[card.suit].icon;
+                subLabel = null;
             }} else {{
                 switch(card.type) {{
-                    case CARD_TYPES.ESCAPE:   bg='bg-sky-200';    tc='text-sky-900';    bc='border-sky-400';    Icon=Flag;    label='Huida'; break;
-                    case CARD_TYPES.PIRATE:   bg='bg-red-800';    tc='text-red-100';    bc='border-red-950';    Icon=Swords;  label=PIRATE_NAMES[card.pirateId]?.name||'Pirata'; break;
-                    case CARD_TYPES.SKULLKING:bg='bg-gray-950';   tc='text-white';      bc='border-yellow-500'; Icon=Crown;   label='King'; break;
-                    case CARD_TYPES.MERMAID:  bg='bg-cyan-600';   tc='text-cyan-50';    bc='border-cyan-800';   Icon=Anchor;  label='Sirena'; break;
-                    case CARD_TYPES.TIGRESS:  bg='bg-orange-600'; tc='text-orange-100'; bc='border-orange-800'; Icon=Ghost;   label='Tigresa'; break;
-                    case CARD_TYPES.KRAKEN:   bg='bg-emerald-950';tc='text-emerald-400';bc='border-emerald-600';Icon=XCircle; label='Kraken'; break;
-                    case CARD_TYPES.WHALE:    bg='bg-blue-900';   tc='text-blue-200';   bc='border-blue-950';   Icon=Waves;   label='Ballena'; break;
-                    case CARD_TYPES.COINS:    bg='bg-yellow-500'; tc='text-yellow-950'; bc='border-yellow-700'; Icon=Handshake;label='Alianza'; break;
+                    case CARD_TYPES.ESCAPE:    art=CARD_ART.ESCAPE;    label='Huida';    subLabel=null;                                  Icon=Flag;      numValue=null; break;
+                    case CARD_TYPES.PIRATE:    art=CARD_ART.PIRATE;    label=PIRATE_NAMES[card.pirateId]?.name||'Pirata'; subLabel='Pirata'; Icon=Swords;  numValue=null; break;
+                    case CARD_TYPES.SKULLKING: art=CARD_ART.SKULLKING; label='Skull King'; subLabel=null;                                Icon=Crown;     numValue=null; break;
+                    case CARD_TYPES.MERMAID:   art=CARD_ART.MERMAID;   label='Sirena';   subLabel=null;                                  Icon=Anchor;    numValue=null; break;
+                    case CARD_TYPES.TIGRESS:   art=CARD_ART.TIGRESS;   label='Tigresa';  subLabel=null;                                  Icon=Ghost;     numValue=null; break;
+                    case CARD_TYPES.KRAKEN:    art=CARD_ART.KRAKEN;    label='Kraken';   subLabel=null;                                  Icon=XCircle;   numValue=null; break;
+                    case CARD_TYPES.WHALE:     art=CARD_ART.WHALE;     label='Ballena';  subLabel=null;                                  Icon=Waves;     numValue=null; break;
+                    case CARD_TYPES.COINS:     art=CARD_ART.COINS;     label='Alianza';  subLabel=null;                                  Icon=Handshake; numValue=null; break;
+                    default:                   art=CARD_ART.PIRATE;    label='?';        subLabel=null;                                  Icon=HelpCircle;numValue=null;
                 }}
             }}
 
-            const base = `relative rounded-xl shadow-xl flex flex-col items-center justify-between p-2 select-none transition-all duration-200
-                ${{size==='small'?'w-12 h-16 text-[10px]':'w-24 h-36 text-base hover:-translate-y-4 hover:shadow-2xl hover:z-10'}}
-                ${{playable?'cursor-pointer ring-2 ring-[#ffd700] ring-offset-2 ring-offset-black':'cursor-not-allowed opacity-80 brightness-75'}}
-                ${{bg}} ${{tc}} border-2 ${{bc}} flex-shrink-0 font-serif`;
+            const W = sm ? 48 : 96;
+            const H = sm ? 68 : 144;
+            const R = sm ? 5 : 9;
+
+            // Truncar nombre de pirata para cartas pequeñas
+            const displayLabel = sm && label.length > 8 ? label.split(' ').pop() : label;
 
             return (
-                <div className={{base}} onClick={{onClick}}>
-                    <div className="absolute inset-0 opacity-10 pointer-events-none mix-blend-multiply bg-white"></div>
-                    <div className="self-start font-bold truncate w-full text-center z-10">{{label}}</div>
-                    <Icon size={{size==='small'?16:32}} className="z-10 drop-shadow-md" />
-                    <div className="self-end font-bold transform rotate-180 w-full text-center z-10">{{label}}</div>
-                    {{card.bonus > 0 && <div className="absolute -top-1 -right-1 text-[9px] bg-[#ffd700] text-black px-1.5 py-0.5 rounded-full border border-yellow-700 font-bold z-20 shadow-sm">+{{card.bonus}}</div>}}
-                    {{card.playedAs && <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-xl z-20"><span className="text-[10px] font-bold text-[#ffd700] bg-black/80 px-2 py-1 rounded border border-[#ffd700] uppercase tracking-wider">{{card.playedAs}}</span></div>}}
+                <div
+                    onClick={{onClick}}
+                    style={{{{
+                        width:`${{W}}px`, height:`${{H}}px`,
+                        background: art.bg,
+                        borderRadius:`${{R}}px`,
+                        border: `${{sm?'1.5':'2'}}px solid ${{art.frame}}`,
+                        boxShadow: playable
+                            ? `0 0 0 2px #ffd700, 0 0 12px rgba(255,215,0,0.5), 0 6px 20px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.15)`
+                            : `0 4px 14px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08)`,
+                        cursor: playable ? 'pointer' : 'not-allowed',
+                        opacity: playable ? 1 : 0.72,
+                        filter: playable ? 'none' : 'brightness(0.8)',
+                        flexShrink: 0,
+                        position: 'relative',
+                        overflow: 'hidden',
+                        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                        userSelect: 'none',
+                        fontFamily: "'Cinzel', 'Georgia', serif",
+                    }}}}
+                    className={{sm ? '' : 'hover:-translate-y-4 hover:z-10'}}
+                >
+                    {{/* Brillo diagonal superior */}}
+                    <div style={{{{
+                        position:'absolute', top:0, left:0, right:0, height:`${{H*0.45}}px`,
+                        background:`linear-gradient(180deg, ${{art.shine}}18 0%, transparent 100%)`,
+                        borderRadius:`${{R}}px ${{R}}px 0 0`, pointerEvents:'none', zIndex:1
+                    }}}}/>
+
+                    {{/* Marco interior ornamentado */}}
+                    <div style={{{{
+                        position:'absolute',
+                        inset: sm?'2px':'4px',
+                        borderRadius:`${{R-2}}px`,
+                        border:`1px solid ${{art.frame}}44`,
+                        pointerEvents:'none', zIndex:2
+                    }}}}/>
+
+                    {{/* Esquinas decorativas (solo tamaño normal) */}}
+                    {{!sm && <>
+                        {{[{{t:'2px',l:'2px'}},{{t:'2px',r:'2px'}},{{b:'2px',l:'2px'}},{{b:'2px',r:'2px'}}].map((pos,i)=>(
+                            <div key={{i}} style={{{{
+                                position:'absolute', width:'10px', height:'10px',
+                                borderTop: i<2?`1.5px solid ${{art.frame}}`:undefined,
+                                borderBottom: i>=2?`1.5px solid ${{art.frame}}`:undefined,
+                                borderLeft: (i===0||i===2)?`1.5px solid ${{art.frame}}`:undefined,
+                                borderRight: (i===1||i===3)?`1.5px solid ${{art.frame}}`:undefined,
+                                ...pos, zIndex:3, pointerEvents:'none'
+                            }}}}/>
+                        ))}}
+                    </>}}
+
+                    {{/* Número (esquina superior izquierda) */}}
+                    {{numValue !== null && (
+                        <div style={{{{
+                            position:'absolute',
+                            top: sm?'2px':'5px', left: sm?'3px':'6px',
+                            zIndex:4, lineHeight:1,
+                            display:'flex', flexDirection:'column', alignItems:'center',
+                        }}}}>
+                            <span style={{{{
+                                fontSize: sm?'11px':'18px',
+                                fontWeight:'900',
+                                color: art.shine,
+                                textShadow:`0 1px 3px rgba(0,0,0,0.8), 0 0 8px ${{art.frame}}88`,
+                                letterSpacing:'-0.5px'
+                            }}}}>{{numValue}}</span>
+                            {{!sm && <Icon size={{9}} style={{{{color:art.accent, marginTop:'1px'}}}}/>}}
+                        </div>
+                    )}}
+
+                    {{/* Número espejo (esquina inferior derecha) */}}
+                    {{numValue !== null && !sm && (
+                        <div style={{{{
+                            position:'absolute', bottom:'5px', right:'6px',
+                            zIndex:4, transform:'rotate(180deg)', lineHeight:1,
+                            display:'flex', flexDirection:'column', alignItems:'center',
+                        }}}}>
+                            <span style={{{{
+                                fontSize:'18px', fontWeight:'900',
+                                color: art.shine,
+                                textShadow:`0 1px 3px rgba(0,0,0,0.8), 0 0 8px ${{art.frame}}88`,
+                                letterSpacing:'-0.5px'
+                            }}}}>{{numValue}}</span>
+                            <Icon size={{9}} style={{{{color:art.accent, marginTop:'1px'}}}}/>
+                        </div>
+                    )}}
+
+                    {{/* Ilustración central — emoji grande + resplandor */}}
+                    <div style={{{{
+                        position:'absolute',
+                        top: sm?'50%':'50%',
+                        left:'50%',
+                        transform: numValue!==null && !sm
+                            ? 'translate(-50%, -44%)'
+                            : 'translate(-50%, -50%)',
+                        zIndex:3,
+                        display:'flex', flexDirection:'column', alignItems:'center', gap:'2px'
+                    }}}}>
+                        {{/* Halo detrás del emoji */}}
+                        <div style={{{{
+                            position:'absolute',
+                            width: sm?'28px':'56px', height: sm?'28px':'56px',
+                            borderRadius:'50%',
+                            background:`radial-gradient(circle, ${{art.frame}}30 0%, transparent 70%)`,
+                            transform:'translate(-50%,-50%)', top:'50%', left:'50%',
+                            pointerEvents:'none'
+                        }}}}/>
+                        <span style={{{{
+                            fontSize: sm?'20px':'40px',
+                            lineHeight:1,
+                            filter:`drop-shadow(0 2px 6px ${{art.frame}}88)`,
+                            position:'relative', zIndex:1
+                        }}}}>{{art.emoji}}</span>
+                        {{/* Nombre de la carta bajo el emoji (tamaño normal, no número) */}}
+                        {{!sm && numValue === null && (
+                            <span style={{{{
+                                fontSize:'9px', fontWeight:'800',
+                                color: art.shine,
+                                textTransform:'uppercase', letterSpacing:'0.08em',
+                                textShadow:`0 1px 4px rgba(0,0,0,0.9)`,
+                                textAlign:'center', maxWidth:`${{W-12}}px`,
+                                lineHeight:1.1, marginTop:'2px'
+                            }}}}>{{label}}</span>
+                        )}}
+                    </div>
+
+                    {{/* Banda inferior con nombre del palo (solo cartas de palo, tamaño normal) */}}
+                    {{!sm && isSuit && (
+                        <div style={{{{
+                            position:'absolute', bottom:0, left:0, right:0,
+                            background:`linear-gradient(0deg, rgba(0,0,0,0.85) 0%, transparent 100%)`,
+                            padding:'10px 6px 5px', zIndex:4, textAlign:'center'
+                        }}}}>
+                            <span style={{{{
+                                fontSize:'8px', fontWeight:'700',
+                                color: art.accent, textTransform:'uppercase',
+                                letterSpacing:'0.12em',
+                                textShadow:'0 1px 3px rgba(0,0,0,0.9)'
+                            }}}}>{{label}}</span>
+                        </div>
+                    )}}
+
+                    {{/* Badge bonus */}}
+                    {{card.bonus > 0 && (
+                        <div style={{{{
+                            position:'absolute', top: sm?'-3px':'-4px', right: sm?'-3px':'-4px',
+                            background:'linear-gradient(135deg,#fbbf24,#f59e0b)',
+                            color:'#1a0a00', fontSize: sm?'7px':'8px',
+                            fontWeight:'900', padding: sm?'1px 3px':'2px 4px',
+                            borderRadius:'999px',
+                            border:'1.5px solid #fef08a',
+                            boxShadow:'0 2px 6px rgba(245,158,11,0.6)',
+                            zIndex:10, lineHeight:1
+                        }}}}>+{{card.bonus}}</div>
+                    )}}
+
+                    {{/* Overlay playedAs (Tigresa) */}}
+                    {{card.playedAs && (
+                        <div style={{{{
+                            position:'absolute', inset:0, display:'flex',
+                            alignItems:'center', justifyContent:'center',
+                            background:'rgba(0,0,0,0.65)', borderRadius:`${{R}}px`, zIndex:20
+                        }}}}>
+                            <span style={{{{
+                                fontSize:'9px', fontWeight:'800', color:'#ffd700',
+                                background:'rgba(0,0,0,0.85)', padding:'3px 7px',
+                                borderRadius:'4px', border:'1px solid #ffd700',
+                                textTransform:'uppercase', letterSpacing:'0.1em'
+                            }}}}>{{card.playedAs}}</span>
+                        </div>
+                    )}}
                 </div>
             );
         }};
@@ -939,11 +1167,17 @@ html_code = f"""<!DOCTYPE html>
                                             <div className="text-xs text-[#c5a059] font-mono bg-[#0f172a] rounded px-2 py-0.5 text-center mb-1">
                                                 {{p.tricksWon}} / {{p.bid===null?'?':p.bid}}
                                             </div>
-                                            <div className="flex -space-x-1 justify-center">
-                                                {{Array(Math.min(p.hand.length,3)).fill(0).map((_,i)=>(
-                                                    <div key={{i}} className="w-3 h-4 bg-[#334155] border border-[#475569] rounded-sm"></div>
+                                            <div className="flex justify-center" style={{{{gap:'1px'}}}}>
+                                                {{Array(Math.min(p.hand.length,4)).fill(0).map((_,i)=>(
+                                                    <div key={{i}} style={{{{
+                                                        width:'8px', height:'11px',
+                                                        background:'linear-gradient(135deg,#1a1a2e,#0f3460)',
+                                                        borderRadius:'2px',
+                                                        border:'1px solid #c5a059',
+                                                        opacity: 1 - i*0.15
+                                                    }}}}/>
                                                 ))}}
-                                                {{p.hand.length>3 && <span className="text-[8px] text-slate-500 ml-1">+{{p.hand.length-3}}</span>}}
+                                                {{p.hand.length>4 && <span className="text-[7px] text-[#c5a059] ml-0.5 font-bold">+{{p.hand.length-4}}</span>}}
                                             </div>
                                         </div>
                                     </div>
@@ -1200,6 +1434,7 @@ html_code = f"""<!DOCTYPE html>
 
             return (
                 <>
+                    <CardSVGDefs />
                     {{renderMainContent()}}
                     {{showHelp && <HelpModal onClose={{() => setShowHelp(false)}} />}}
                 </>
