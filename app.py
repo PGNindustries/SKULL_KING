@@ -1276,7 +1276,7 @@ html_code = f"""<!DOCTYPE html>
                         )}}
 
                         {{/* ── OPONENTES ── */}}
-                        <div className="flex justify-center gap-3 p-3 overflow-x-auto flex-shrink-0" style={{{{marginRight: showLeaderboard?'240px':'0', transition:'margin 0.3s'}}}}>
+                        <div className="flex justify-start md:justify-center gap-3 p-3 overflow-x-auto flex-shrink-0" style={{{{marginRight: showLeaderboard?'240px':'0', transition:'margin 0.3s'}}}}>
                             {{opponents.map(p => {{
                                 const isActive = gameState.players[gameState.turnIndex]?.uid === p.uid;
                                 // Durante TRICK_RESOLVING, destacamos al ganador
@@ -1466,8 +1466,8 @@ html_code = f"""<!DOCTYPE html>
                                         </div>
                                     )}}
                                 </div>
-                                <div className={{`flex justify-center overflow-x-auto px-4 pb-4 gap-2 hide-scrollbar transition-opacity duration-200 ${{isHandMinimized?'opacity-0 pointer-events-none':'opacity-100'}}`}}>
-                                    <div className="flex md:-space-x-6 min-w-max pt-2 gap-2 md:gap-0">
+                                <div className={{`w-full overflow-x-auto pb-4 hide-scrollbar transition-opacity duration-200 ${{isHandMinimized?'opacity-0 pointer-events-none':'opacity-100'}}`}}>
+                                    <div className="flex justify-start md:justify-center min-w-max px-4 pt-2 gap-2 md:gap-0 md:-space-x-6">
                                         {{me.hand.sort((a,b)=>a.type===b.type?a.value-b.value:a.type.localeCompare(b.type)).map(card=>{{
                                             const isMyTurn = !isTableFull && gameState.phase==='PLAYING' && gameState.players[gameState.turnIndex]?.uid===user.uid;
                                             const valid = canPlayCard(card);
