@@ -590,7 +590,7 @@ html_code = f"""<!DOCTYPE html>
                                             {{step:'2', icon:'🃏', title:'Tirar cartas', desc:'El primero tira una carta marcando el palo. Los demás deben seguir ese palo si lo tienen (Loro/Mapa/Cofre). Si alguien ha tirado un negro (Jolly Roger), ya no hay obligación de seguir palo.'}},
                                             {{step:'3', icon:'🏆', title:'Ganar la baza', desc:'La carta más alta del palo liderador gana, o el Jolly Roger más alto. Los especiales tienen reglas propias. El ganador empieza la siguiente baza.'}},
                                             {{step:'4', icon:'🔄', title:'Nueva ronda', desc:'El que ganó la última baza empieza la siguiente ronda. Las cartas repartidas aumentan en 1 cada ronda.'}},
-                                        ]}}.map(s => (
+                                        ].map(s => (
                                             <div key={{s.step}} className="bg-[#0f172a] rounded-xl p-3 flex gap-3 items-start border border-[#334155]">
                                                 <div className="w-7 h-7 rounded-full bg-[#c5a059] text-black font-bold flex items-center justify-center flex-shrink-0 text-xs">{{s.step}}</div>
                                                 <div>
@@ -616,7 +616,7 @@ html_code = f"""<!DOCTYPE html>
                                         {{rank:'—', color:'bg-emerald-900',label:'🐙 Kraken', desc:'Nadie gana la baza. Quien lo jugó elige quién empieza la siguiente.', extra:''}},
                                         {{rank:'—', color:'bg-blue-900',   label:'🐋 Ballena', desc:'Anula todos los palos especiales. Gana la carta numérica más alta (incluso no negra).', extra:''}},
                                         {{rank:'—', color:'bg-yellow-600', label:'🤝 Alianza (Monedas)', desc:'Si alguien la juega en una baza que ganas, ambos os lleváis +20 pts bonus.', extra:''}},
-                                    ]}}.map((r,i) => (
+                                    ].map((r,i) => (
                                         <div key={{i}} className="flex gap-3 items-start bg-[#0f172a] rounded-xl p-3 border border-[#334155]">
                                             <div className={{`w-6 h-6 rounded-full ${{r.color}} flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-white`}}>{{r.rank}}</div>
                                             <div>
@@ -663,7 +663,7 @@ html_code = f"""<!DOCTYPE html>
                                                 {{label:'Skull King captura Pirata', pts:'+30 c/u'}},
                                                 {{label:'Sirena captura Skull King', pts:'+40'}},
                                                 {{label:'Alianza (Monedas) mutua', pts:'+20 a ambos'}},
-                                            ]}}.map((b,i) => (
+                                            ].map((b,i) => (
                                                 <div key={{i}} className="flex justify-between items-center text-sm">
                                                     <span className="text-slate-300">{{b.label}}</span>
                                                     <span className="font-bold text-[#ffd700] bg-[#2a2000] px-2 py-0.5 rounded">{{b.pts}}</span>
@@ -683,7 +683,7 @@ html_code = f"""<!DOCTYPE html>
                                         {{color:'border-purple-500', emoji:'⬇️', name:'Vigía Javi',          desc:'En la SIGUIENTE baza, gana la carta más BAJA en lugar de la más alta. ¡Invierte las reglas!'}},
                                         {{color:'border-emerald-500',emoji:'🧭', name:'Timonel Sergio',      desc:'Elige quién empieza la siguiente baza (tú u otro jugador).'}},
                                         {{color:'border-orange-500', emoji:'🔀', name:'Corsario Torri',      desc:'Intercambia todas tus cartas restantes con las de otro jugador que elijas.'}},
-                                    ]}}.map((p,i) => (
+                                    ].map((p,i) => (
                                         <div key={{i}} className={{`bg-[#0f172a] p-4 rounded-xl border-l-4 ${{p.color}} border border-[#1e293b]`}}>
                                             <div className="font-bold text-white text-base flex items-center gap-2">
                                                 <span>{{p.emoji}}</span> {{p.name}}
