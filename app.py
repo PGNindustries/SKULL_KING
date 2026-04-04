@@ -767,15 +767,35 @@ html_code = f"""<!DOCTYPE html>
                 setCurrentWinnerId(partial || null);
             }}, [gameState?.trickCards?.length, gameState?.phase]);
 
-            // Anuncio al inicio de cada fase PLAYING (turno especial Javi: baja gana)
+            // Anuncios globales (Ballena/Kraken en tiempo real, efectos Piratas confirmados)
             useEffect(() => {{
                 if (!gameState) return;
-                if (gameState.phase === 'PLAYING' && gameState.nextTrickLowWins) {{
-                    setRoundStartMsg('⬇ ¡La carta MÁS BAJA gana esta baza!');
-                    const t = setTimeout(() => setRoundStartMsg(null), 2500);
-                    return () => clearTimeout(t);
+                
+                // Efectos Kraken/Ballena al jugarlos a la mesa
+                if (gameState.trickCards && gameState.trickCards.length > 0) {{
+                    const lastCard = gameState.trickCards[gameState.trickCards.length - 1].card;
+                    if (lastCard.type === CARD_TYPES.KRAKEN) {{
+                        setRoundStartMsg('🐙 ¡El Kraken destruye la baza!');
+                        const t = setTimeout(() => setRoundStartMsg(null), 3500);
+                        return () => clearTimeout(t);
+                    }} else if (lastCard.type === CARD_TYPES.WHALE) {{
+                        setRoundStartMsg('🐋 ¡La Ballena se come los palos especiales!');
+                        const t = setTimeout(() => setRoundStartMsg(null), 3500);
+                        return () => clearTimeout(t);
+                    }}
                 }}
-            }}, [gameState?.nextTrickLowWins, gameState?.trickCards?.length]);
+            }}, [gameState?.trickCards?.length]);
+
+            useEffect(() => {{
+                if (gameState?.actionBroadcast?.ts) {{
+                    // Evitar que salte si es muy viejo (ej. recargó página tras 10s)
+                    if (Date.now() - gameState.actionBroadcast.ts < 10000) {{
+                        setRoundStartMsg(gameState.actionBroadcast.msg);
+                        const t = setTimeout(() => setRoundStartMsg(null), 4000);
+                        return () => clearTimeout(t);
+                    }}
+                }}
+            }}, [gameState?.actionBroadcast?.ts]);
 
             // ── LÓGICA DE CUENTA ATRÁS ──────────────────────────────────────
             // El host detecta mesa llena en PLAYING y pone TRICK_RESOLVING.
@@ -968,16 +988,24 @@ html_code = f"""<!DOCTYPE html>
                 const me = players.find(p => p.uid === user.uid);
                 let nextLowWins = false, nextStarterOverride = null;
 
-                if      (action.pirateId === 'PEDRO')  me.bid = Math.max(0, me.bid + payload.mod);
-                else if (action.pirateId === 'ELIAS')  me.eliasBet = payload.bet;
+                let bCast = "";
+                if      (action.pirateId === 'PEDRO')  {{ me.bid = Math.max(0, me.bid + payload.mod); bCast = `🎯 El Capitán Pedro ha modificado la apuesta de ${{me.name}}`; }}
+                else if (action.pirateId === 'ELIAS')  {{ me.eliasBet = payload.bet; bCast = `💰 El Contramaestre Elías ha hecho un pacto secreto...`; }}
                 else if (action.pirateId === 'TORRI' && payload.targetId) {{
                     const ti = players.findIndex(p => p.uid === payload.targetId);
-                    if (ti !== -1) {{ const h = [...me.hand]; me.hand = [...players[ti].hand]; players[ti].hand = h; }}
+                    if (ti !== -1) {{ 
+                        const h = [...me.hand]; me.hand = [...players[ti].hand]; players[ti].hand = h; 
+                        bCast = `🔀 ¡Torri intercambia las cartas de ${{me.name}} y ${{players[ti].name}}!`;
+                    }}
                 }}
-                else if (action.pirateId === 'JAVI')   nextLowWins = true;
-                else if (action.pirateId === 'SERGIO') nextStarterOverride = payload.targetId;
+                else if (action.pirateId === 'JAVI')   {{ nextLowWins = true; bCast = `⬇ ¡Vigía Javi impone que la carta MÁS BAJA gane!`; }}
+                else if (action.pirateId === 'SERGIO') {{ 
+                    nextStarterOverride = payload.targetId; 
+                    const tn = players.find(p => p.uid === payload.targetId)?.name;
+                    bCast = `🧭 ¡Timonel Sergio elige que ${{tn}} empiece!`; 
+                }}
 
-                await finishTrickResolution(user.uid, gameState.trickCards, players, {{ nextLowWins, nextStarterOverride }});
+                await finishTrickResolution(user.uid, gameState.trickCards, players, {{ nextLowWins, nextStarterOverride, broadcast: bCast }});
             }};
 
             const finishTrickResolution = async (winnerId, cards, players, extra={{}}) => {{
@@ -1043,13 +1071,15 @@ html_code = f"""<!DOCTYPE html>
                     await updateDoc(roomRef(), {{
                         players, phase: gameState.round>=10?'GAME_END':'ROUND_END',
                         trickCards:[], pendingPirateAction:null, alliances,
-                        lastRoundWinnerId: winnerId !== 'KRAKEN' ? winnerId : (cards[0]?.playerId || null)
+                        lastRoundWinnerId: winnerId !== 'KRAKEN' ? winnerId : (cards[0]?.playerId || null),
+                        actionBroadcast: extra.broadcast ? {{ msg: extra.broadcast, ts: Date.now() }} : null
                     }});
                 }} else {{
                     await updateDoc(roomRef(), {{
                         players, trickCards:[], turnIndex:nextTurn, phase:'PLAYING',
                         nextTrickLowWins: extra.nextLowWins||false,
-                        nextTrickStarter:null, pendingPirateAction:null, alliances
+                        nextTrickStarter:null, pendingPirateAction:null, alliances,
+                        actionBroadcast: extra.broadcast ? {{ msg: extra.broadcast, ts: Date.now() }} : null
                     }});
                 }}
             }};
@@ -1288,7 +1318,7 @@ html_code = f"""<!DOCTYPE html>
                                         <div className={{`bg-[#1e293b] p-2 rounded-xl border-2 ${{isWinner?'border-[#ffd700] shadow-[0_0_20px_rgba(255,215,0,0.5)]':isActive&&!isResolvingPhase?'border-[#ffd700] shadow-[0_0_15px_rgba(255,215,0,0.3)]':'border-[#334155]'}}`}}>
                                             <div className="font-bold truncate w-full text-center text-xs mb-1 text-white">{{p.name}}</div>
                                             <div className="text-xs text-[#c5a059] font-mono bg-[#0f172a] rounded px-2 py-0.5 text-center mb-1">
-                                                {{p.tricksWon}} / {{p.bid===null?'?':p.bid}}
+                                                {{p.tricksWon}} / {{(gameState.phase==='BIDDING' && p.uid!==user.uid) ? (p.bid===null?'?':'✔️') : (p.bid===null?'?':p.bid)}}
                                             </div>
                                             <div className="flex justify-center" style={{{{gap:'1px'}}}}>
                                                 {{Array(Math.min(p.hand.length,4)).fill(0).map((_,i)=>(
