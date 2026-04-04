@@ -548,102 +548,159 @@ html_code = f"""<!DOCTYPE html>
             );
         }};
 
-        // MODAL DE AYUDA / MANUAL DEL PIRATA
-        const HelpModal = ({{ onClose }}) => (
-            <div className="fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-4 backdrop-blur-sm animate-fadeIn">
-                <div className="bg-[#1e293b] p-6 md:p-8 rounded-2xl border-2 border-[#c5a059] shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto custom-scrollbar relative text-left text-[#e2d2ac]">
-                    <button onClick={{onClose}} className="absolute top-4 right-4 text-slate-400 hover:text-white bg-slate-800 rounded-full p-2 transition-colors"><X size={{24}}/></button>
-                    <h2 className="text-2xl md:text-4xl font-bold text-[#ffd700] mb-6 flex items-center gap-3 border-b border-[#334155] pb-4">
-                        <HelpCircle size={{36}}/> Manual del Pirata
-                    </h2>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-sm md:text-base">
-                        
-                        {{/* COLUMNA IZQUIERDA */}}
-                        <div className="space-y-6">
-                            <section>
-                                <h3 className="text-xl font-bold text-white mb-2 pb-1 border-b border-slate-600">🏴‍☠️ Cómo Jugar</h3>
-                                <p className="mb-2">El juego consta de <strong>10 rondas</strong>. En la ronda 1 se reparte 1 carta, en la 10 se reparten 10. Al inicio, debes observar tu mano y <strong>apostar cuántas bazas vas a ganar</strong>.</p>
-                                <ul className="list-disc pl-5 space-y-1 text-slate-300">
-                                    <li>El primer jugador tira una carta y marca el <strong>palo a seguir</strong> (Loro, Mapa o Cofre). Los demás están obligados a seguir ese palo si lo tienen.</li>
-                                    <li>Las cartas negras (Jolly Roger) son triunfos: ganan a cualquier palo normal.</li>
-                                    <li>Las cartas Especiales (Huidas, Sirenas, Piratas, etc.) se pueden jugar en cualquier momento, <strong>incluso si tienes el palo pedido</strong>.</li>
-                                </ul>
-                            </section>
-
-                            <section>
-                                <h3 className="text-xl font-bold text-white mb-2 pb-1 border-b border-slate-600">👑 Jerarquía de Cartas</h3>
-                                <p className="mb-2 text-slate-400 text-xs">De la más fuerte a la más débil:</p>
-                                <ol className="list-decimal pl-5 space-y-1 text-slate-300">
-                                    <li><strong className="text-yellow-400">Skull King:</strong> Gana a todo... ¡excepto a la Sirena!</li>
-                                    <li><strong className="text-cyan-400">Sirena:</strong> Gana al Skull King y palos, pero pierde contra Piratas.</li>
-                                    <li><strong className="text-red-400">Pirata / Tigresa (Pirata):</strong> Ganan a Sirenas y palos normales/negros.</li>
-                                    <li><strong className="text-gray-400">Jolly Roger (Negras):</strong> Triunfo numerado (1-14). Gana a palos normales.</li>
-                                    <li><strong>Palos Normales:</strong> Loro (Verde), Mapa (Morado), Cofre (Amarillo). El mayor número gana.</li>
-                                    <li><strong className="text-sky-300">Huida / Tigresa (Huida):</strong> Siempre pierde (valor 0).</li>
-                                    <li><strong className="text-emerald-400">Kraken:</strong> Destruye la baza. Nadie la gana. El que lo tiró decide quién empieza la siguiente.</li>
-                                    <li><strong className="text-blue-400">Ballena:</strong> Cambia todos los palos y gana la carta numérica más alta (incluso si no es negra).</li>
-                                </ol>
-                            </section>
-
-                            <section>
-                                <h3 className="text-xl font-bold text-white mb-2 pb-1 border-b border-slate-600">💰 Puntuaciones</h3>
-                                <ul className="list-disc pl-5 space-y-1 text-slate-300">
-                                    <li><strong className="text-green-400">Apuesta Acertada (1 a 10):</strong> +20 pts por cada baza ganada.</li>
-                                    <li><strong className="text-green-400">Apuesta 0 Acertada:</strong> +10 pts multiplicados por la ronda actual (ej. Ronda 5 = +50 pts).</li>
-                                    <li><strong className="text-red-400">Apuesta Fallada:</strong> -10 pts por cada baza de diferencia entre tu apuesta y lo que ganaste (incluso si apuestas 0).</li>
-                                    <li className="pt-2 text-[#ffd700]"><strong>Puntos Extra (Bonus):</strong>
-                                        <ul className="pl-5 mt-1 text-slate-300 border-l border-[#c5a059] ml-2 space-y-1">
-                                            <li>- Ganar con un 14 normal: +10 pts.</li>
-                                            <li>- Ganar con un 14 negro: +20 pts.</li>
-                                            <li>- Pirata captura a una Sirena: +20 pts.</li>
-                                            <li>- Skull King captura Piratas: +30 pts (c/u).</li>
-                                            <li>- Sirena captura al Skull King: +40 pts.</li>
-                                        </ul>
-                                    </li>
-                                </ul>
-                            </section>
-                        </div>
-
-                        {{/* COLUMNA DERECHA: HABILIDADES PIRATA */}}
-                        <div className="bg-[#0f172a] p-5 rounded-xl border-2 border-red-900/50">
-                            <h3 className="text-xl font-bold text-[#ffd700] mb-4 pb-2 border-b border-[#c5a059] flex items-center gap-2">
-                                <Swords size={{24}}/> Habilidades Pirata
-                            </h3>
-                            <p className="mb-4 text-sm text-slate-400">
-                                Al ganar una baza con uno de estos piratas, se activará su poder especial inmediatamente:
-                            </p>
-                            <div className="space-y-4">
-                                <div className="bg-[#1e293b] p-3 rounded-lg border-l-4 border-red-500">
-                                    <span className="font-bold text-white block mb-1">Capitán Pedro</span>
-                                    <span className="text-sm text-slate-300">Te permite modificar tu apuesta actual sumando 1, restando 1, o manteniéndola igual. Muy útil si te pasas o te quedas corto.</span>
-                                </div>
-                                <div className="bg-[#1e293b] p-3 rounded-lg border-l-4 border-blue-500">
-                                    <span className="font-bold text-white block mb-1">Contramaestre Elías</span>
-                                    <span className="text-sm text-slate-300">Haces una apuesta secundaria secreta. Puedes apostar 0, 10 o 20 pts extras (se sumarán o restarán a tu puntuación dependiendo de si aciertas tu apuesta principal o no).</span>
-                                </div>
-                                <div className="bg-[#1e293b] p-3 rounded-lg border-l-4 border-emerald-500">
-                                    <span className="font-bold text-white block mb-1">Vigía Javi</span>
-                                    <span className="text-sm text-slate-300">¡Locura! Obliga a que en la siguiente baza, la carta ganadora sea <strong>la más baja</strong> en lugar de la más alta. Invierte totalmente las reglas.</span>
-                                </div>
-                                <div className="bg-[#1e293b] p-3 rounded-lg border-l-4 border-purple-500">
-                                    <span className="font-bold text-white block mb-1">Timonel Sergio</span>
-                                    <span className="text-sm text-slate-300">Toma el timón y elige qué jugador (puedes ser tú u otro) empezará tirando carta en la siguiente baza.</span>
-                                </div>
-                                <div className="bg-[#1e293b] p-3 rounded-lg border-l-4 border-orange-500">
-                                    <span className="font-bold text-white block mb-1">Corsario Torri</span>
-                                    <span className="text-sm text-slate-300">El ladrón de manos. Intercambias todas las cartas que te quedan en la mano con las de cualquier otro jugador de la mesa que elijas.</span>
-                                </div>
+        // MODAL DE AYUDA — rediseñado con tabs y visual claro
+        const HelpModal = ({{ onClose }}) => {{
+            const [tab, setTab] = useState('reglas');
+            const TabBtn = ({{id, label}}) => (
+                <button onClick={{()=>setTab(id)}} className={{`px-4 py-2 rounded-lg text-sm font-bold transition-all ${{tab===id?'bg-[#c5a059] text-black':'bg-[#334155] text-slate-300 hover:bg-[#475569]'}}`}}>
+                    {{label}}
+                </button>
+            );
+            return (
+                <div className="fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-3 backdrop-blur-sm animate-fadeIn">
+                    <div className="bg-[#1e293b] rounded-2xl border-2 border-[#c5a059] shadow-2xl w-full max-w-2xl max-h-[92vh] overflow-hidden flex flex-col relative text-[#e2d2ac]">
+                        <button onClick={{onClose}} className="absolute top-3 right-3 text-slate-400 hover:text-white bg-slate-800 rounded-full p-1.5 transition-colors z-10"><X size={{20}}/></button>
+                        {{/* Header */}}
+                        <div className="p-5 pb-3 border-b border-[#334155] flex-shrink-0">
+                            <h2 className="text-2xl font-bold text-[#ffd700] flex items-center gap-2 mb-3">
+                                <HelpCircle size={{28}}/> Manual del Pirata
+                            </h2>
+                            <div className="flex gap-2 flex-wrap">
+                                <TabBtn id="reglas" label="🏴‍☠️ Reglas"/>
+                                <TabBtn id="jerarquia" label="👑 Cartas"/>
+                                <TabBtn id="puntos" label="💰 Puntos"/>
+                                <TabBtn id="piratas" label="⚔️ Piratas"/>
                             </div>
                         </div>
+                        {{/* Content */}}
+                        <div className="overflow-y-auto flex-1 p-5 custom-scrollbar text-sm">
 
-                    </div>
-                    <div className="mt-8 text-center">
-                        <button onClick={{onClose}} className="bg-[#c5a059] hover:bg-[#ffd700] text-black px-10 py-3 rounded-xl font-bold text-lg transition-colors shadow-lg">¡Entendido, al abordaje!</button>
+                            {{tab === 'reglas' && (
+                                <div className="space-y-4">
+                                    <div className="bg-[#0f172a] rounded-xl p-4 border border-[#334155]">
+                                        <h3 className="font-bold text-white mb-2 text-base">📋 Estructura</h3>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <div className="bg-[#1e293b] rounded-lg p-3 text-center"><div className="text-2xl font-bold text-[#ffd700]">10</div><div className="text-xs text-slate-400">Rondas</div></div>
+                                            <div className="bg-[#1e293b] rounded-lg p-3 text-center"><div className="text-2xl font-bold text-[#ffd700]">1→10</div><div className="text-xs text-slate-400">Cartas por ronda</div></div>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        {{[
+                                            {{step:'1', icon:'👀', title:'Ver y apostar', desc:'Mira tu mano y apuesta cuántas bazas ganarás esta ronda (puede ser 0).'}},
+                                            {{step:'2', icon:'🃏', title:'Tirar cartas', desc:'El primero tira una carta marcando el palo. Los demás deben seguir ese palo si lo tienen (Loro/Mapa/Cofre). Si alguien ha tirado un negro (Jolly Roger), ya no hay obligación de seguir palo.'}},
+                                            {{step:'3', icon:'🏆', title:'Ganar la baza', desc:'La carta más alta del palo liderador gana, o el Jolly Roger más alto. Los especiales tienen reglas propias. El ganador empieza la siguiente baza.'}},
+                                            {{step:'4', icon:'🔄', title:'Nueva ronda', desc:'El que ganó la última baza empieza la siguiente ronda. Las cartas repartidas aumentan en 1 cada ronda.'}},
+                                        ]].map(s => (
+                                            <div key={{s.step}} className="bg-[#0f172a] rounded-xl p-3 flex gap-3 items-start border border-[#334155]">
+                                                <div className="w-7 h-7 rounded-full bg-[#c5a059] text-black font-bold flex items-center justify-center flex-shrink-0 text-xs">{{s.step}}</div>
+                                                <div>
+                                                    <div className="font-bold text-white">{{s.icon}} {{s.title}}</div>
+                                                    <div className="text-slate-400 text-xs mt-0.5">{{s.desc}}</div>
+                                                </div>
+                                            </div>
+                                        ))}}
+                                    </div>
+                                </div>
+                            )}}
+
+                            {{tab === 'jerarquia' && (
+                                <div className="space-y-2">
+                                    <p className="text-slate-400 text-xs mb-3">De mayor a menor fuerza:</p>
+                                    {{[
+                                        {{rank:'1', color:'bg-yellow-500', label:'👑 Skull King', desc:'Gana a todo… ¡excepto a la Sirena que juega después!', extra:''}},
+                                        {{rank:'2', color:'bg-cyan-600',   label:'🧜 Sirena',     desc:'Gana al Skull King si se jugó después. Pierde contra Piratas.', extra:''}},
+                                        {{rank:'3', color:'bg-red-700',    label:'⚔️ Pirata / Tigresa (Pirata)', desc:'Gana a Sirenas y a todos los palos.', extra:''}},
+                                        {{rank:'4', color:'bg-gray-700',   label:'💀 Jolly Roger (Negro)', desc:'Triunfo numerado (1-14). Gana a cualquier palo normal.', extra:'Si hay un negro en mesa, los demás pueden tirar lo que quieran.'}},
+                                        {{rank:'5', color:'bg-emerald-700',label:'🦜 Loro · 🗺️ Mapa · 💰 Cofre', desc:'Palos normales. Gana el número más alto del palo que salió primero.', extra:''}},
+                                        {{rank:'6', color:'bg-sky-800',    label:'🏳️ Huida / Tigresa (Huida)', desc:'Siempre pierde.', extra:''}},
+                                        {{rank:'—', color:'bg-emerald-900',label:'🐙 Kraken', desc:'Nadie gana la baza. Quien lo jugó elige quién empieza la siguiente.', extra:''}},
+                                        {{rank:'—', color:'bg-blue-900',   label:'🐋 Ballena', desc:'Anula todos los palos especiales. Gana la carta numérica más alta (incluso no negra).', extra:''}},
+                                        {{rank:'—', color:'bg-yellow-600', label:'🤝 Alianza (Monedas)', desc:'Si alguien la juega en una baza que ganas, ambos os lleváis +20 pts bonus.', extra:''}},
+                                    ]].map((r,i) => (
+                                        <div key={{i}} className="flex gap-3 items-start bg-[#0f172a] rounded-xl p-3 border border-[#334155]">
+                                            <div className={{`w-6 h-6 rounded-full ${{r.color}} flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-white`}}>{{r.rank}}</div>
+                                            <div>
+                                                <div className="font-bold text-white text-sm">{{r.label}}</div>
+                                                <div className="text-slate-400 text-xs mt-0.5">{{r.desc}}</div>
+                                                {{r.extra && <div className="text-[#c5a059] text-xs mt-0.5 italic">{{r.extra}}</div>}}
+                                            </div>
+                                        </div>
+                                    ))}}
+                                </div>
+                            )}}
+
+                            {{tab === 'puntos' && (
+                                <div className="space-y-3">
+                                    <div className="grid grid-cols-1 gap-2">
+                                        <div className="bg-green-900/30 border border-green-700 rounded-xl p-4">
+                                            <div className="font-bold text-green-400 mb-2">✅ Apuesta acertada (1-10)</div>
+                                            <div className="text-2xl font-bold text-white">Apuesta × 20 pts</div>
+                                            <div className="text-xs text-slate-400 mt-1">+ bonus si aplican (ver abajo)</div>
+                                        </div>
+                                        <div className="bg-green-900/30 border border-green-700 rounded-xl p-4">
+                                            <div className="font-bold text-green-400 mb-2">✅ Apuesta acertada (0)</div>
+                                            <div className="text-2xl font-bold text-white">Ronda × 10 pts</div>
+                                            <div className="text-xs text-slate-400 mt-1">Ej. Ronda 7 → +70 pts si ganas 0 bazas</div>
+                                        </div>
+                                        <div className="bg-red-900/30 border border-red-700 rounded-xl p-4">
+                                            <div className="font-bold text-red-400 mb-2">❌ Apuesta fallada (1-10)</div>
+                                            <div className="text-2xl font-bold text-white">Diferencia × -10 pts</div>
+                                            <div className="text-xs text-slate-400 mt-1">Sin bonus. Ej. apostaste 3, ganaste 1 → -20 pts</div>
+                                        </div>
+                                        <div className="bg-red-900/30 border border-red-700 rounded-xl p-4">
+                                            <div className="font-bold text-red-400 mb-2">❌ Apuesta fallada (0)</div>
+                                            <div className="text-2xl font-bold text-white">Ronda × -10 pts</div>
+                                            <div className="text-xs text-slate-400 mt-1">Ej. apostaste 0 pero ganaste bazas → Ronda 7 = -70 pts</div>
+                                        </div>
+                                    </div>
+                                    <div className="bg-[#1a1a0a] border border-[#c5a059] rounded-xl p-4">
+                                        <div className="font-bold text-[#ffd700] mb-2">⭐ Bonus (solo si aciertas)</div>
+                                        <div className="space-y-1.5">
+                                            {{[
+                                                {{label:'14 de palo normal', pts:'+10'},
+                                                {{label:'14 negro (Jolly Roger)', pts:'+20'},
+                                                {{label:'Pirata captura Sirena', pts:'+20'},
+                                                {{label:'Skull King captura Pirata', pts:'+30 c/u'},
+                                                {{label:'Sirena captura Skull King', pts:'+40'},
+                                                {{label:'Alianza (Monedas) mutua', pts:'+20 a ambos'},
+                                            ]].map((b,i) => (
+                                                <div key={{i}} className="flex justify-between items-center text-sm">
+                                                    <span className="text-slate-300">{{b.label}}</span>
+                                                    <span className="font-bold text-[#ffd700] bg-[#2a2000] px-2 py-0.5 rounded">{{b.pts}}</span>
+                                                </div>
+                                            ))}}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}}
+
+                            {{tab === 'piratas' && (
+                                <div className="space-y-3">
+                                    <p className="text-slate-400 text-xs">Al ganar una baza con estos piratas, se activa su poder:</p>
+                                    {{[
+                                        {{color:'border-red-500',    emoji:'🎯', name:'Capitán Pedro',       desc:'Modifica tu apuesta actual: -1, mantener, o +1. Muy útil si te has pasado o quedado corto.'}},
+                                        {{color:'border-blue-500',   emoji:'💰', name:'Contramaestre Elías', desc:'Apuesta secundaria secreta: 0, +10 o +20 pts. Se suma si aciertas, se resta si fallas.'}},
+                                        {{color:'border-purple-500', emoji:'⬇️', name:'Vigía Javi',          desc:'En la SIGUIENTE baza, gana la carta más BAJA en lugar de la más alta. ¡Invierte las reglas!'}},
+                                        {{color:'border-emerald-500',emoji:'🧭', name:'Timonel Sergio',      desc:'Elige quién empieza la siguiente baza (tú u otro jugador).'}},
+                                        {{color:'border-orange-500', emoji:'🔀', name:'Corsario Torri',      desc:'Intercambia todas tus cartas restantes con las de otro jugador que elijas.'}},
+                                    ]].map((p,i) => (
+                                        <div key={{i}} className={{`bg-[#0f172a] p-4 rounded-xl border-l-4 ${{p.color}} border border-[#1e293b]`}}>
+                                            <div className="font-bold text-white text-base flex items-center gap-2">
+                                                <span>{{p.emoji}}</span> {{p.name}}
+                                            </div>
+                                            <div className="text-slate-300 text-sm mt-1">{{p.desc}}</div>
+                                        </div>
+                                    ))}}
+                                </div>
+                            )}}
+                        </div>
+                        <div className="p-4 border-t border-[#334155] flex-shrink-0">
+                            <button onClick={{onClose}} className="w-full bg-[#c5a059] hover:bg-[#ffd700] text-black py-3 rounded-xl font-bold text-base transition-colors shadow-lg">¡Entendido, al abordaje!</button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        );
+            );
+        }};
 
         // =====================================================================
         // COMPONENTE PRINCIPAL
@@ -663,6 +720,9 @@ html_code = f"""<!DOCTYPE html>
             const [isHandMinimized, setIsHandMinimized] = useState(false);
             // Estado local para la cuenta atrás (sólo visual, no en Firebase)
             const [trickWinnerId,   setTrickWinnerId]   = useState(null);
+            const [currentWinnerId, setCurrentWinnerId] = useState(null); // ganador parcial mientras se juega
+            const [roundStartMsg,   setRoundStartMsg]   = useState(null); // anuncio inicio de ronda
+            const [showRoomCode,    setShowRoomCode]    = useState(false);
             const resolvingTrickRef = useRef(false);
             const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
@@ -698,6 +758,24 @@ html_code = f"""<!DOCTYPE html>
                 if (!gameState) return;
                 setIsHandMinimized(gameState.phase === 'PIRATE_ACTION' || !!tigressModal);
             }}, [gameState?.phase, tigressModal]);
+
+            // Ganador parcial mientras se juegan cartas (actualizar en tiempo real)
+            useEffect(() => {{
+                if (!gameState || gameState.phase !== 'PLAYING') {{ setCurrentWinnerId(null); return; }}
+                if (gameState.trickCards.length === 0) {{ setCurrentWinnerId(null); return; }}
+                const partial = determineTrickWinner(gameState.trickCards, gameState.nextTrickLowWins);
+                setCurrentWinnerId(partial || null);
+            }}, [gameState?.trickCards?.length, gameState?.phase]);
+
+            // Anuncio al inicio de cada fase PLAYING (turno especial Javi: baja gana)
+            useEffect(() => {{
+                if (!gameState) return;
+                if (gameState.phase === 'PLAYING' && gameState.nextTrickLowWins) {{
+                    setRoundStartMsg('⬇ ¡La carta MÁS BAJA gana esta baza!');
+                    const t = setTimeout(() => setRoundStartMsg(null), 2500);
+                    return () => clearTimeout(t);
+                }}
+            }}, [gameState?.nextTrickLowWins, gameState?.trickCards?.length]);
 
             // ── LÓGICA DE CUENTA ATRÁS ──────────────────────────────────────
             // El host detecta mesa llena en PLAYING y pone TRICK_RESOLVING.
@@ -788,11 +866,17 @@ html_code = f"""<!DOCTYPE html>
                     p.hand = deck.splice(0, roundNum);
                     p.bid = null; p.tricksWon = 0; p.bonusPoints = 0; p.eliasBet = null;
                 }});
+                // El que ganó la última baza de la ronda anterior empieza
+                let startTurnIndex = (gameState.dealerIndex + 1) % players.length;
+                if (gameState.lastRoundWinnerId) {{
+                    const wi = players.findIndex(p => p.uid === gameState.lastRoundWinnerId);
+                    if (wi !== -1) startTurnIndex = wi;
+                }}
                 await updateDoc(roomRef(), {{
                     phase:'BIDDING', round:roundNum, players,
-                    trickCards:[], turnIndex:(gameState.dealerIndex+1)%players.length,
+                    trickCards:[], turnIndex:startTurnIndex,
                     nextTrickLowWins:false, nextTrickStarter:null,
-                    alliances:[], pendingPirateAction:null
+                    alliances:[], pendingPirateAction:null, lastRoundWinnerId:null
                 }});
             }};
 
@@ -806,18 +890,22 @@ html_code = f"""<!DOCTYPE html>
             const canPlayCard = card => {{
                 if (gameState.trickCards.length >= gameState.players.length) return false;
                 if (gameState.trickCards.length === 0) return true;
-                const valid = gameState.trickCards
-                    .filter(p => p.card.type !== CARD_TYPES.ESCAPE && p.card.type !== CARD_TYPES.COINS)
-                    .sort((a,b) => a.order - b.order);
-                const leadSuit = valid.length > 0 && valid[0].card.type === CARD_TYPES.SUIT ? valid[0].card.suit : null;
-                if (!leadSuit) return true;
+                // Especiales (huidas, piratas, SK, sirenas, kraken, ballena...) siempre jugables
+                if (card.type !== CARD_TYPES.SUIT) return true;
+                // Buscar la primera carta de palo NORMAL (Loro/Mapa/Cofre) que marcó el palo
+                const sorted = [...gameState.trickCards].sort((a,b) => a.order - b.order);
+                // Si hay un negro (TRUMP) en mesa, no hay obligación de seguir palo
+                const trumpPlayed = sorted.some(p => p.card.type === CARD_TYPES.SUIT && p.card.suit === 'TRUMP');
+                if (trumpPlayed) return true;
+                // Buscar palo normal líder
+                const leadPlay = sorted.find(p => p.card.type === CARD_TYPES.SUIT && p.card.suit !== 'TRUMP');
+                if (!leadPlay) return true; // No hay palo normal liderando -> libre
+                const leadSuit = leadPlay.card.suit;
                 const myHand = gameState.players.find(p => p.uid === user.uid).hand;
                 const hasLead = myHand.some(c => c.type === CARD_TYPES.SUIT && c.suit === leadSuit);
-                if (card.type === CARD_TYPES.SUIT) {{
-                    if (hasLead) return card.suit === leadSuit || card.suit === 'TRUMP';
-                    return true;
-                }}
-                return true;
+                if (!hasLead) return true; // No tenemos el palo -> libre
+                // Tenemos el palo: obligatorio tirarlo (o tirar negro)
+                return card.suit === leadSuit || card.suit === 'TRUMP';
             }};
 
             const handleCardClick = card => {{
@@ -931,9 +1019,16 @@ html_code = f"""<!DOCTYPE html>
                 if (roundOver) {{
                     players.forEach(p => {{
                         const diff = Math.abs(p.bid - p.tricksWon);
-                        let pts = diff === 0
-                            ? (p.bid === 0 ? gameState.round*10 : p.bid*20) + p.bonusPoints + (p.eliasBet||0)
-                            : diff * -10 - (p.eliasBet||0);
+                        let pts;
+                        if (diff === 0) {{
+                            // Apuesta acertada: base + bonus + elias
+                            const base = p.bid === 0 ? gameState.round * 10 : p.bid * 20;
+                            pts = base + p.bonusPoints + (p.eliasBet || 0);
+                        }} else {{
+                            // Apuesta fallada: penalización, sin bonus. Apuesta 0 falla -> -10*ronda
+                            const pen = p.bid === 0 ? gameState.round * -10 : diff * -10;
+                            pts = pen - (p.eliasBet || 0);
+                        }}
                         alliances.forEach(al => {{
                             const partnerId = al.p1===p.uid?al.p2:al.p2===p.uid?al.p1:null;
                             if (partnerId) {{
@@ -944,9 +1039,11 @@ html_code = f"""<!DOCTYPE html>
                         p.score += pts;
                         p.lastRoundScore = pts;
                     }});
+                    // Guardar quién ganó la última baza para que empiece la siguiente ronda
                     await updateDoc(roomRef(), {{
                         players, phase: gameState.round>=10?'GAME_END':'ROUND_END',
-                        trickCards:[], pendingPirateAction:null, alliances
+                        trickCards:[], pendingPirateAction:null, alliances,
+                        lastRoundWinnerId: winnerId !== 'KRAKEN' ? winnerId : (cards[0]?.playerId || null)
                     }});
                 }} else {{
                     await updateDoc(roomRef(), {{
@@ -1098,23 +1195,40 @@ html_code = f"""<!DOCTYPE html>
                     <div className="bg-[#0f172a] h-screen overflow-hidden flex flex-col text-[#e2d2ac] font-serif relative">
 
                         {{/* ── HEADER ── */}}
-                        <div className="bg-[#1e293b] p-3 flex justify-between items-center shadow-lg z-20 border-b border-[#334155] flex-shrink-0">
-                            <div className="flex items-center gap-3">
-                                <div className="bg-[#0f172a] px-4 py-1 rounded-full border border-[#c5a059] flex items-center gap-2">
-                                    <span className="text-slate-400 text-xs uppercase">Ronda</span>
-                                    <span className="text-[#ffd700] font-bold text-lg">{{gameState.round}}</span>
+                        <div className="bg-[#1e293b] p-2 flex justify-between items-center shadow-lg z-20 border-b border-[#334155] flex-shrink-0">
+                            <div className="flex items-center gap-2">
+                                {{/* Ronda */}}
+                                <div className="bg-[#0f172a] px-3 py-1 rounded-full border border-[#c5a059] flex items-center gap-1.5">
+                                    <span className="text-slate-400 text-xs uppercase">R</span>
+                                    <span className="text-[#ffd700] font-bold text-lg leading-none">{{gameState.round}}</span>
                                     <span className="text-slate-600 text-xs">/10</span>
                                 </div>
-                                {{gameState.nextTrickLowWins && <span className="bg-purple-900 text-purple-300 text-xs px-2 py-1 rounded border border-purple-600 font-bold">⬇ BAJA GANA</span>}}
+                                {{/* Código de sala — siempre visible en el header */}}
+                                <button
+                                    onClick={{()=>{{ navigator.clipboard.writeText(activeRoomId); showToast('¡Código copiado: ' + activeRoomId + '!'); }}}}
+                                    className="bg-[#0f172a] px-2 py-1 rounded-full border border-[#334155] hover:border-[#c5a059] transition-colors flex items-center gap-1 group"
+                                    title="Código de sala — toca para copiar"
+                                >
+                                    <span className="text-[10px] text-slate-500 uppercase">Sala</span>
+                                    <span className="text-xs font-mono font-bold text-[#c5a059] tracking-widest group-hover:text-[#ffd700] transition-colors">{{activeRoomId}}</span>
+                                </button>
+                                {{gameState.nextTrickLowWins && <span className="bg-purple-900 text-purple-300 text-[10px] px-2 py-0.5 rounded border border-purple-600 font-bold">⬇ BAJA</span>}}
                             </div>
                             
-                            {{/* BOTONES DE AYUDA Y LEADERBOARD EN EL HEADER */}}
-                            <div className="flex gap-2">
-                                <button onClick={{()=>setShowHelp(true)}} className="bg-[#334155] p-2 rounded text-[#c5a059] hover:text-[#ffd700] hover:bg-[#475569] transition-colors shadow-sm" title="Manual del Pirata (Ayuda)">
-                                    <HelpCircle size={{20}}/>
+                            <div className="flex gap-1.5 items-center">
+                                {{/* Abandonar partida */}}
+                                <button
+                                    onClick={{()=>{{ if(confirm('¿Abandonar la partida? El código es ' + activeRoomId + ' para volver.')) setActiveRoomId(''); }}}}
+                                    className="bg-[#334155] p-2 rounded text-slate-400 hover:text-red-400 hover:bg-red-900/30 transition-colors shadow-sm"
+                                    title="Abandonar partida"
+                                >
+                                    <Home size={{16}}/>
+                                </button>
+                                <button onClick={{()=>setShowHelp(true)}} className="bg-[#334155] p-2 rounded text-[#c5a059] hover:text-[#ffd700] hover:bg-[#475569] transition-colors shadow-sm" title="Reglas">
+                                    <HelpCircle size={{18}}/>
                                 </button>
                                 <button onClick={{()=>setShowLeaderboard(!showLeaderboard)}} className="bg-[#334155] p-2 rounded text-white hover:bg-[#475569] transition-colors shadow-sm" title="Clasificación">
-                                    <ListOrdered size={{20}}/>
+                                    <ListOrdered size={{18}}/>
                                 </button>
                             </div>
                         </div>
@@ -1142,6 +1256,15 @@ html_code = f"""<!DOCTYPE html>
                         {{toast && (
                             <div className="absolute top-20 left-1/2 -translate-x-1/2 bg-[#7f1d1d] text-white px-6 py-3 rounded-xl font-bold shadow-2xl z-50 border-2 border-red-500 text-center w-max max-w-[90vw]">
                                 {{toast}}
+                            </div>
+                        )}}
+
+                        {{/* ── ANUNCIO INICIO DE BAZA (Javi: baja gana) ── */}}
+                        {{roundStartMsg && (
+                            <div className="absolute inset-0 z-[60] flex items-center justify-center pointer-events-none">
+                                <div className="bg-purple-950/95 border-2 border-purple-400 rounded-2xl px-10 py-6 shadow-2xl animate-scaleIn text-center">
+                                    <div className="text-3xl font-bold text-purple-200">{{roundStartMsg}}</div>
+                                </div>
                             </div>
                         )}}
 
@@ -1280,18 +1403,33 @@ html_code = f"""<!DOCTYPE html>
                             {{/* Cartas en la mesa */}}
                             {{gameState.trickCards.map((play,i) => {{
                                 const isWinnerCard = isResolvingPhase && trickWinnerId && play.playerId === trickWinnerId;
+                                const isCurrentWinner = !isResolvingPhase && currentWinnerId && play.playerId === currentWinnerId && gameState.trickCards.length > 0;
+                                const isPirate = play.card.type === CARD_TYPES.PIRATE;
+                                const pirateName = isPirate ? (PIRATE_NAMES[play.card.pirateId]?.name || 'Pirata') : null;
                                 return (
                                     <div key={{i}} className="absolute transition-all duration-500 ease-out z-10" style={{{{
-                                        transform: `translate(${{Math.cos(2*Math.PI*i/gameState.trickCards.length)*rx}}px, ${{Math.sin(2*Math.PI*i/gameState.trickCards.length)*ry}}px) rotate(${{(i - gameState.trickCards.length/2)*15}}deg) ${{isWinnerCard ? 'scale(1.15)' : ''}}`
+                                        transform: `translate(${{Math.cos(2*Math.PI*i/gameState.trickCards.length)*rx}}px, ${{Math.sin(2*Math.PI*i/gameState.trickCards.length)*ry}}px) rotate(${{(i - gameState.trickCards.length/2)*15}}deg) ${{(isWinnerCard||isCurrentWinner) ? 'scale(1.15)' : ''}}`
                                     }}}}>
-                                        <div className="relative group">
+                                        <div className="relative">
                                             <Card card={{play.card}} size={{isMobile?'small':'normal'}}/>
-                                            {{/* Halo dorado en la carta ganadora */}}
+                                            {{/* Halo dorado: ganador final */}}
                                             {{isWinnerCard && (
                                                 <div className="absolute inset-0 rounded-xl ring-4 ring-[#ffd700] shadow-[0_0_20px_rgba(255,215,0,0.8)] pointer-events-none z-30 animate-pulse"></div>
                                             )}}
-                                            <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] font-bold bg-black/80 text-white px-2 py-0.5 rounded-full whitespace-nowrap border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                                                {{play.playerName}}
+                                            {{/* Halo blanco: ganando parcialmente */}}
+                                            {{isCurrentWinner && !isWinnerCard && (
+                                                <div className="absolute inset-0 rounded-xl ring-2 ring-white/60 shadow-[0_0_12px_rgba(255,255,255,0.4)] pointer-events-none z-30"></div>
+                                            )}}
+                                            {{/* Etiqueta: nombre del jugador + pirata si aplica — siempre visible */}}
+                                            <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 flex flex-col items-center gap-0.5 pointer-events-none" style={{{{zIndex:40}}}}>
+                                                <div className="text-[9px] font-bold bg-black/85 text-white px-2 py-0.5 rounded-full whitespace-nowrap border border-white/20">
+                                                    {{play.playerName}}
+                                                </div>
+                                                {{isPirate && (
+                                                    <div className="text-[8px] font-bold bg-red-900/90 text-red-200 px-1.5 py-0.5 rounded-full whitespace-nowrap border border-red-500/50">
+                                                        {{pirateName}}
+                                                    </div>
+                                                )}}
                                             </div>
                                         </div>
                                     </div>
