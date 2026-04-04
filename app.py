@@ -324,9 +324,9 @@ html_code = f"""<!DOCTYPE html>
                 }}
             }}
 
-            const W = sm ? 48 : 96;
-            const H = sm ? 68 : 144;
-            const R = sm ? 5 : 9;
+            const W = sm ? 52 : 112; // Aumentado para PC (antes 96) y móvil (antes 48)
+            const H = sm ? 74 : 168; // Alto proporcional (antes 144)
+            const R = sm ? 6 : 10;
 
             // Truncar nombre de pirata para cartas pequeñas
             const displayLabel = sm && label.length > 8 ? label.split(' ').pop() : label;
@@ -423,7 +423,7 @@ html_code = f"""<!DOCTYPE html>
                     {{/* Ilustración central — emoji grande + resplandor */}}
                     <div style={{{{
                         position:'absolute',
-                        top: sm?'50%':'50%',
+                        top: '50%',
                         left:'50%',
                         transform: numValue!==null && !sm
                             ? 'translate(-50%, -44%)'
@@ -1098,13 +1098,22 @@ html_code = f"""<!DOCTYPE html>
 
                 // ── LOBBY DE ENTRADA ──────────────────────────────────────────────
                 if (!activeRoomId) return (
-                    <div className="bg-[#0f172a] min-h-screen text-[#e2d2ac] font-serif p-6 flex flex-col items-center justify-center relative">
-                        <div className="text-center mb-8">
-                            <div className="flex justify-center mb-4"><Skull className="text-[#c5a059]" size={{80}} /></div>
-                            <h1 className="text-5xl text-[#ffd700] font-bold drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] tracking-wider">SKULL KING</h1>
-                            <p className="text-slate-400 mt-2 text-sm">El juego de cartas pirata definitivo</p>
+                    <div className="bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#1e293b] via-[#090b10] to-black min-h-screen text-[#e2d2ac] font-serif p-6 flex flex-col items-center justify-center relative overflow-hidden">
+                        {{/* Luces piratas de fondo */}}
+                        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-900/20 rounded-full blur-[120px] pointer-events-none"></div>
+                        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-[#c5a059]/10 rounded-full blur-[120px] pointer-events-none"></div>
+                        
+                        <div className="text-center mb-8 relative z-10">
+                            <div className="flex justify-center mb-6 animate-float">
+                                <div className="relative">
+                                    <Skull className="text-[#c5a059] relative z-10" size={{90}} />
+                                    <div className="absolute inset-0 bg-[#ffd700] blur-xl opacity-20"></div>
+                                </div>
+                            </div>
+                            <h1 className="text-6xl md:text-7xl font-black gold-text-gradient tracking-wider mb-2">SKULL KING</h1>
+                            <p className="text-slate-400 mt-3 text-sm md:text-base tracking-[0.2em] uppercase">El juego de mesa definitivo</p>
                         </div>
-                        <div className="space-y-6 w-full max-w-sm bg-[#1e293b] p-8 rounded-2xl border-4 border-[#c5a059] shadow-2xl relative">
+                        <div className="space-y-6 w-full max-w-sm glass-panel p-8 rounded-2xl relative z-10">
                             <div className="space-y-2">
                                 <label className="text-xs uppercase font-bold text-[#c5a059] tracking-widest">Tu Nombre de Pirata</label>
                                 <input
@@ -1219,13 +1228,15 @@ html_code = f"""<!DOCTYPE html>
                 const isPAPhase   = gameState.phase === 'PIRATE_ACTION';
                 const isResolvingPhase = gameState.phase === 'TRICK_RESOLVING';
                 const myPAId      = isPAPhase && gameState.pendingPirateAction?.winnerId === user.uid ? gameState.pendingPirateAction.pirateId : null;
-                const rx = isMobile ? 50 : 80, ry = isMobile ? 40 : 60;
+                const rx = isMobile ? 55 : 120, ry = isMobile ? 45 : 85;
 
                 return (
-                    <div className="bg-[#0f172a] h-screen overflow-hidden flex flex-col text-[#e2d2ac] font-serif relative">
+                    <div className="bg-gradient-to-b from-[#090b10] to-black h-screen overflow-hidden flex flex-col text-[#e2d2ac] font-serif relative">
+                        {{/* Luz tenue de fondo de aplicación */}}
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(197,160,89,0.03)_0%,transparent_100%)] pointer-events-none"></div>
 
                         {{/* ── HEADER ── */}}
-                        <div className="bg-[#1e293b] p-2 flex justify-between items-center shadow-lg z-20 border-b border-[#334155] flex-shrink-0">
+                        <div className="glass-panel p-2 flex justify-between items-center z-20 flex-shrink-0">
                             <div className="flex items-center gap-2">
                                 {{/* Ronda */}}
                                 <div className="bg-[#0f172a] px-3 py-1 rounded-full border border-[#c5a059] flex items-center gap-1.5">
@@ -1313,11 +1324,9 @@ html_code = f"""<!DOCTYPE html>
                                 const isWinner = isResolvingPhase && trickWinnerId === p.uid;
                                 return (
                                     <div key={{p.uid}} className={{`relative flex flex-col items-center min-w-[80px] transition-all duration-300 ${{isActive&&!isResolvingPhase?'scale-110 z-10':isWinner?'scale-125 z-10':'opacity-70'}}`}}>
-                                        {{isActive && !isResolvingPhase && <div className="absolute -top-6 text-[#ffd700] animate-bounce"><Swords size={{18}}/></div>}}
-                                        {{isWinner && <div className="absolute -top-6 text-[#ffd700] animate-bounce"><Trophy size={{18}}/></div>}}
-                                        <div className={{`bg-[#1e293b] p-2 rounded-xl border-2 ${{isWinner?'border-[#ffd700] shadow-[0_0_20px_rgba(255,215,0,0.5)]':isActive&&!isResolvingPhase?'border-[#ffd700] shadow-[0_0_15px_rgba(255,215,0,0.3)]':'border-[#334155]'}}`}}>
-                                            <div className="font-bold truncate w-full text-center text-xs mb-1 text-white">{{p.name}}</div>
-                                            <div className="text-xs text-[#c5a059] font-mono bg-[#0f172a] rounded px-2 py-0.5 text-center mb-1">
+                                        <div className={{`glass-panel p-2 rounded-xl border-2 transition-all duration-300 ${{isWinner?'border-[#ffd700] bg-[#ffd700]/10 shadow-[0_0_30px_rgba(255,215,0,0.5)]':isActive&&!isResolvingPhase?'border-[#ffd700] shadow-[0_0_20px_rgba(255,215,0,0.3)]':'border-white/10 hover:border-white/20'}}`}}>
+                                            <div className="font-bold truncate w-full text-center text-[11px] mb-1 text-white uppercase tracking-wider">{{p.name}}</div>
+                                            <div className="text-xs text-[#c5a059] font-mono bg-black/50 rounded px-2 py-0.5 text-center mb-1 shadow-inner border border-white/5">
                                                 {{p.tricksWon}} / {{(gameState.phase==='BIDDING' && p.uid!==user.uid) ? (p.bid===null?'?':'✔️') : (p.bid===null?'?':p.bid)}}
                                             </div>
                                             <div className="flex justify-center" style={{{{gap:'1px'}}}}>
@@ -1340,12 +1349,14 @@ html_code = f"""<!DOCTYPE html>
 
                         {{/* ── MESA ── */}}
                         <div className="flex-1 relative flex items-center justify-center overflow-hidden" style={{{{marginRight: showLeaderboard?'240px':'0', transition:'margin 0.3s'}}}}>
-                            {{/* Tapete */}}
-                            <div className="absolute inset-2 rounded-[2rem] border-[12px] border-[#3e2723] overflow-hidden pointer-events-none">
-                                <div className="absolute inset-0 bg-[#0f3d3e]"></div>
-                                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_30%,rgba(0,0,0,0.6)_100%)]"></div>
-                                <div className="absolute inset-0 flex items-center justify-center opacity-10 text-[#c5a059]">
-                                    <Skull size={{200}} strokeWidth={{1}}/>
+                            {{/* Tapete Casino con textura de fieltro */}}
+                            <div className="absolute inset-2 md:inset-6 rounded-[2rem] md:rounded-[3.5rem] border-8 md:border-[16px] border-[#201008] shadow-[inset_0_0_40px_rgba(0,0,0,0.9),0_20px_40px_rgba(0,0,0,0.6)] overflow-hidden pointer-events-none">
+                                <div className="absolute inset-0 bg-gradient-to-br from-[#0c3c3a] to-[#041a1a]"></div>
+                                <div className="absolute inset-0 opacity-15 mix-blend-overlay" style={{{{backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`}}}}></div>
+                                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_10%,rgba(0,0,0,0.7)_100%)]"></div>
+                                <div className="absolute inset-0 ring-1 ring-inset ring-white/10 rounded-[1.5rem] md:rounded-[2.5rem]"></div>
+                                <div className="absolute inset-0 flex items-center justify-center opacity-5 text-[#c5a059] animate-pulse">
+                                    <Skull size={{250}} strokeWidth={{1}}/>
                                 </div>
                             </div>
 
@@ -1473,11 +1484,11 @@ html_code = f"""<!DOCTYPE html>
                         <div className="z-20 relative flex-shrink-0" style={{{{marginRight: showLeaderboard?'240px':'0', transition:'margin 0.3s'}}}}>
                             <button
                                 onClick={{()=>setIsHandMinimized(!isHandMinimized)}}
-                                className="absolute top-[-28px] right-4 bg-[#1e293b] text-[#c5a059] rounded-t-lg px-3 py-1.5 border-t border-l border-r border-[#334155] text-xs font-bold flex items-center gap-1 shadow-lg z-30"
+                                className="absolute top-[-28px] right-4 glass-panel !border-b-0 text-[#ffd700] rounded-t-lg px-4 py-1.5 text-xs font-bold flex items-center gap-1 shadow-[0_-5px_15px_rgba(0,0,0,0.3)] z-30 tracking-wider uppercase backdrop-blur-xl hover:bg-white/10 transition-colors"
                             >
                                 {{isHandMinimized?<ChevronUp size={{14}}/>:<ChevronDown size={{14}}/>}} Mis Cartas ({{me.hand.length}})
                             </button>
-                            <div className={{`bg-[#1e293b] shadow-[0_-4px_20px_rgba(0,0,0,0.5)] border-t border-[#334155] transition-all duration-300 overflow-hidden ${{isHandMinimized?'h-14':'h-auto'}}`}}>
+                            <div className={{`glass-panel border-x-0 border-b-0 !border-t-white/10 shadow-[0_-10px_30px_rgba(0,0,0,0.6)] transition-all duration-300 overflow-hidden ${{isHandMinimized?'h-14':'h-auto'}}`}}>
                                 <div className="flex justify-between items-center px-4 py-2">
                                     <div className="flex items-center gap-3">
                                         <div className="bg-[#0f172a] px-3 py-1.5 rounded-lg border border-[#334155]">
