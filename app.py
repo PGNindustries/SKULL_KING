@@ -657,12 +657,12 @@ html_code = f"""<!DOCTYPE html>
                                         <div className="font-bold text-[#ffd700] mb-2">⭐ Bonus (solo si aciertas)</div>
                                         <div className="space-y-1.5">
                                             {{[
-                                                {{label:'14 de palo normal', pts:'+10'},
-                                                {{label:'14 negro (Jolly Roger)', pts:'+20'},
-                                                {{label:'Pirata captura Sirena', pts:'+20'},
-                                                {{label:'Skull King captura Pirata', pts:'+30 c/u'},
-                                                {{label:'Sirena captura Skull King', pts:'+40'},
-                                                {{label:'Alianza (Monedas) mutua', pts:'+20 a ambos'},
+                                                {{label:'14 de palo normal', pts:'+10'}},
+                                                {{label:'14 negro (Jolly Roger)', pts:'+20'}},
+                                                {{label:'Pirata captura Sirena', pts:'+20'}},
+                                                {{label:'Skull King captura Pirata', pts:'+30 c/u'}},
+                                                {{label:'Sirena captura Skull King', pts:'+40'}},
+                                                {{label:'Alianza (Monedas) mutua', pts:'+20 a ambos'}},
                                             ]].map((b,i) => (
                                                 <div key={{i}} className="flex justify-between items-center text-sm">
                                                     <span className="text-slate-300">{{b.label}}</span>
