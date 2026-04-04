@@ -776,11 +776,11 @@ html_code = f"""<!DOCTYPE html>
                     const lastCard = gameState.trickCards[gameState.trickCards.length - 1].card;
                     if (lastCard.type === CARD_TYPES.KRAKEN) {{
                         setRoundStartMsg('🐙 ¡El Kraken destruye la baza!');
-                        const t = setTimeout(() => setRoundStartMsg(null), 3500);
+                        const t = setTimeout(() => setRoundStartMsg(null), 2000);
                         return () => clearTimeout(t);
                     }} else if (lastCard.type === CARD_TYPES.WHALE) {{
                         setRoundStartMsg('🐋 ¡La Ballena se come los palos especiales!');
-                        const t = setTimeout(() => setRoundStartMsg(null), 3500);
+                        const t = setTimeout(() => setRoundStartMsg(null), 2000);
                         return () => clearTimeout(t);
                     }}
                 }}
@@ -791,7 +791,7 @@ html_code = f"""<!DOCTYPE html>
                     // Evitar que salte si es muy viejo (ej. recargó página tras 10s)
                     if (Date.now() - gameState.actionBroadcast.ts < 10000) {{
                         setRoundStartMsg(gameState.actionBroadcast.msg);
-                        const t = setTimeout(() => setRoundStartMsg(null), 4000);
+                        const t = setTimeout(() => setRoundStartMsg(null), 2000);
                         return () => clearTimeout(t);
                     }}
                 }}
